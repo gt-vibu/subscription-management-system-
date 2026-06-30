@@ -34,11 +34,11 @@ const register = async (req, res, next) => {
     const user = await authService.registerUser(name, email, password);
     const token = authService.generateToken(user._id, user.role);
 
-    const isProd = process.env.NODE_ENV === 'production';
     res.cookie('token', token, {
       httpOnly: true,
-      secure: isProd ? true : false,
-      sameSite: isProd ? 'None' : 'Lax',
+      secure: true,
+      sameSite: 'None',
+      path: '/',
       maxAge: parseExpiresIn(process.env.JWT_EXPIRES_IN || '30m')
     });
 
@@ -63,11 +63,11 @@ const login = async (req, res, next) => {
     const user = await authService.loginUser(email, password);
     const token = authService.generateToken(user._id, user.role);
 
-    const isProd = process.env.NODE_ENV === 'production';
     res.cookie('token', token, {
       httpOnly: true,
-      secure: isProd ? true : false,
-      sameSite: isProd ? 'None' : 'Lax',
+      secure: true,
+      sameSite: 'None',
+      path: '/',
       maxAge: parseExpiresIn(process.env.JWT_EXPIRES_IN || '30m')
     });
 
@@ -81,11 +81,11 @@ const login = async (req, res, next) => {
  * Log out user and clear cookie
  */
 const logout = (req, res) => {
-  const isProd = process.env.NODE_ENV === 'production';
   res.clearCookie('token', {
     httpOnly: true,
-    secure: isProd ? true : false,
-    sameSite: isProd ? 'None' : 'Lax'
+    secure: true,
+    sameSite: 'None',
+    path: '/'
   });
   return sendResponse(res, 200, null, 'Logged out successfully');
 };
