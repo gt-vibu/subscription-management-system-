@@ -104,6 +104,14 @@ if (shouldCluster && cluster.isMaster) {
     app.use(cookieParser());
 
     // 2) API ROUTES
+    app.get('/', (req, res) => {
+      res.status(200).json({
+        success: true,
+        message: 'Subscription Management API is running 🚀',
+        version: '1.0.0'
+      });
+    });
+
     app.use('/api/auth', require('./routes/authRoutes'));
     app.use('/api/plans', require('./routes/planRoutes'));
     app.use('/api/subscriptions', require('./routes/subscriptionRoutes'));
