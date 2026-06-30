@@ -10,7 +10,7 @@ const { sendEmail } = require('./emailService');
 const generateToken = (userId, role) => {
   return jwt.sign(
     { userId, role },
-    process.env.JWT_SECRET || 'super_secret_subscription_jwt_token_key_2026',
+    process.env.JWT_SECRET,
     { expiresIn: process.env.JWT_EXPIRES_IN || '30m' }
   );
 };
@@ -53,15 +53,44 @@ const loginUser = async (email, password) => {
     throw new AppError('Please provide email and password', 400);
   }
 
-  // Find user and explicitly select password and verification fields
-  const user = await User.findOne({ email }).select('+password +verificationOtpHash +verificationOtpExpires');
-  if (!user || !(await user.comparePassword(password))) {
+  // Find user and select password, loginAttempts, and lockUntil fields
+  const user = await User.findOne({ email }).select('+password +loginAttempts +lockUntil');
+  
+  if (!user) {
+    throw new AppError('Incorrect email or password', 401);
+  }
+
+  // Check if account is locked
+  if (user.lockUntil && user.lockUntil > Date.now()) {
+    const remainingMinutes = Math.ceil((user.lockUntil - Date.now()) / (60 * 1000));
+    throw new AppError(`Your account is temporarily locked. Please try again in ${remainingMinutes} minutes.`, 403);
+  }
+
+  // Verify password
+  if (!(await user.comparePassword(password))) {
+    user.loginAttempts = (user.loginAttempts || 0) + 1;
+    
+    if (user.loginAttempts >= 5) {
+      user.lockUntil = Date.now() + 15 * 60 * 1000; // 15 minutes lockout
+      user.loginAttempts = 0; // Reset counter for next cycle
+      await user.save();
+      throw new AppError('Your account has been temporarily locked for 15 minutes due to 5 consecutive failed login attempts.', 403);
+    }
+    
+    await user.save();
     throw new AppError('Incorrect email or password', 401);
   }
 
   // Check if account is active
   if (!user.isActive) {
     throw new AppError('Your account has been deactivated. Please contact support.', 403);
+  }
+
+  // Reset login attempts on successful login
+  if (user.loginAttempts > 0 || user.lockUntil) {
+    user.loginAttempts = 0;
+    user.lockUntil = undefined;
+    await user.save();
   }
 
   // Exclude password from returned object

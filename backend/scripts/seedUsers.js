@@ -6,28 +6,33 @@ const User = require('../models/User');
 const seedUsers = async () => {
   try {
     // 1) Verify presence of required credentials in environment
+    const superAdminName = process.env.SUPER_ADMIN_NAME;
     const superAdminEmail = process.env.SUPER_ADMIN_EMAIL;
     const superAdminPassword = process.env.SUPER_ADMIN_PASSWORD;
+    const adminName = process.env.ADMIN_NAME;
     const adminEmail = process.env.ADMIN_EMAIL;
     const adminPassword = process.env.ADMIN_PASSWORD;
 
-    if (!superAdminEmail || !superAdminPassword || !adminEmail || !adminPassword) {
-      console.error('Seeding Error: Missing required environment variables (emails or passwords).');
+    if (
+      !superAdminName ||
+      !superAdminEmail ||
+      !superAdminPassword ||
+      !adminName ||
+      !adminEmail ||
+      !adminPassword
+    ) {
+      console.error('Seeding Error: Missing one or more required environment variables (names, emails, or passwords).');
       process.exit(1);
     }
 
     // 2) Establish database connection
     await connectDB();
 
-    // Sync schema indexes to avoid database indexing conflicts
-    await User.syncIndexes();
-
     // 3) Seed Super Admin user if not existing
     const superAdminExists = await User.findOne({ email: superAdminEmail.toLowerCase() });
     if (superAdminExists) {
       console.log(`Super Admin (${superAdminEmail}) already exists. Seeding skipped.`);
     } else {
-      const superAdminName = process.env.SUPER_ADMIN_NAME || 'Super Admin';
       const newSuperAdmin = new User({
         name: superAdminName,
         email: superAdminEmail,
@@ -45,7 +50,6 @@ const seedUsers = async () => {
     if (adminExists) {
       console.log(`Standard Admin (${adminEmail}) already exists. Seeding skipped.`);
     } else {
-      const adminName = process.env.ADMIN_NAME || 'Standard Admin';
       const newAdmin = new User({
         name: adminName,
         email: adminEmail,

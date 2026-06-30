@@ -4,6 +4,23 @@ const { sendResponse } = require('../utils/responseHandler');
 const AppError = require('../utils/appError');
 
 /**
+ * Utility to parse expiry string (e.g. '30m', '7d') into milliseconds
+ */
+const parseExpiresIn = (expiresIn) => {
+  const match = String(expiresIn).trim().match(/^(\d+)([smhd])$/);
+  if (!match) return 30 * 60 * 1000;
+  const value = parseInt(match[1], 10);
+  const unit = match[2];
+  switch (unit) {
+    case 's': return value * 1000;
+    case 'm': return value * 60 * 1000;
+    case 'h': return value * 60 * 60 * 1000;
+    case 'd': return value * 24 * 60 * 60 * 1000;
+    default: return 30 * 60 * 1000;
+  }
+};
+
+/**
  * Register a new user
  */
 const register = async (req, res, next) => {
@@ -17,12 +34,11 @@ const register = async (req, res, next) => {
     const user = await authService.registerUser(name, email, password);
     const token = authService.generateToken(user._id, user.role);
 
-    // Auto log-in on signup since verification is bypassed
     res.cookie('token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'Strict',
-      maxAge: 30 * 60 * 1000 // 30 minutes
+      maxAge: parseExpiresIn(process.env.JWT_EXPIRES_IN || '30m')
     });
 
     return sendResponse(
@@ -46,12 +62,11 @@ const login = async (req, res, next) => {
     const user = await authService.loginUser(email, password);
     const token = authService.generateToken(user._id, user.role);
 
-    // Set secure httpOnly cookie
     res.cookie('token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'Strict',
-      maxAge: 30 * 60 * 1000 // 30 minutes
+      maxAge: parseExpiresIn(process.env.JWT_EXPIRES_IN || '30m')
     });
 
     return sendResponse(res, 200, { user }, 'Login successful');

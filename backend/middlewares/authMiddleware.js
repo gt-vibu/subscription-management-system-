@@ -14,7 +14,7 @@ const protect = async (req, res, next) => {
 
     let decoded;
     try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET || 'super_secret_subscription_jwt_token_key_2026');
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
     } catch (err) {
       return next(new AppError('Invalid or expired token. Please log in again.', 401));
     }
@@ -45,7 +45,7 @@ const optionalProtect = async (req, res, next) => {
 
     let decoded;
     try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET || 'super_secret_subscription_jwt_token_key_2026');
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
     } catch (err) {
       return next();
     }

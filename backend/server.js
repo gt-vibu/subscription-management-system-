@@ -1,4 +1,10 @@
 require('dotenv').config();
+
+if (!process.env.JWT_SECRET) {
+  console.error('CRITICAL STARTUP ERROR: JWT_SECRET environment variable is missing.');
+  process.exit(1);
+}
+
 const cluster = require('cluster');
 const os = require('os');
 
