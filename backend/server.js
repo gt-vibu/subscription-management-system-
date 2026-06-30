@@ -69,10 +69,18 @@ if (shouldCluster && cluster.isMaster) {
         origin: (origin, callback) => {
           // Allow requests with no origin (like mobile apps, curl)
           if (!origin) return callback(null, true);
-          // Allow any localhost port (e.g. 5173, 5174, 3000, etc.)
+          
+          // Allow any localhost port (e.g. 5173, 5174, 3000, etc.) for local development
           if (/^https?:\/\/(localhost|127\.0\.0\.1):\d+$/.test(origin)) {
             return callback(null, true);
           }
+          
+          // Allow production Vercel frontend url
+          const allowedFrontend = process.env.FRONTEND_URL ? process.env.FRONTEND_URL.replace(/\/$/, '') : null;
+          if (allowedFrontend && origin === allowedFrontend) {
+            return callback(null, true);
+          }
+          
           return callback(new Error('Not allowed by CORS'));
         },
         credentials: true,
