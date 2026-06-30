@@ -10,10 +10,26 @@ const client = axios.create({
   },
 });
 
+// Request interceptor to attach bearer token
+client.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
 // Response interceptor to format errors and extract message
 client.interceptors.response.use(
   (response) => response,
   (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+    }
+
     // If the server returned an operational error response, use its message
     const errorMessage =
       error.response?.data?.message ||

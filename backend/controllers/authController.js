@@ -45,7 +45,7 @@ const register = async (req, res, next) => {
     return sendResponse(
       res,
       201,
-      { user: { ...user, isVerified: true } },
+      { user: { ...user, isVerified: true }, token },
       'Registration successful.'
     );
   } catch (error) {
@@ -71,7 +71,7 @@ const login = async (req, res, next) => {
       maxAge: parseExpiresIn(process.env.JWT_EXPIRES_IN || '30m')
     });
 
-    return sendResponse(res, 200, { user }, 'Login successful');
+    return sendResponse(res, 200, { user, token }, 'Login successful');
   } catch (error) {
     next(error);
   }
