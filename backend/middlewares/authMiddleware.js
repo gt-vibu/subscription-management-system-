@@ -7,6 +7,9 @@ const AppError = require('../utils/appError');
  */
 const protect = async (req, res, next) => {
   try {
+    console.log("Cookies:", req.cookies);
+    console.log("Headers Cookie:", req.headers.cookie);
+
     const token = req.cookies.token;
     if (!token) {
       return next(new AppError('You are not logged in. Please log in to get access.', 401));
@@ -40,6 +43,9 @@ const protect = async (req, res, next) => {
  */
 const optionalProtect = async (req, res, next) => {
   try {
+    console.log("Cookies:", req.cookies);
+    console.log("Headers Cookie:", req.headers.cookie);
+
     const token = req.cookies.token;
     if (!token) return next();
 
