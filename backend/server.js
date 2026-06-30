@@ -59,6 +59,9 @@ if (shouldCluster && cluster.isMaster) {
     // Initialize express application
     const app = express();
 
+    // Trust proxy for reverse proxy environments (e.g. Render, Heroku)
+    app.set('trust proxy', 1);
+
     // 1) GLOBAL MIDDLEWARES
     // Secure HTTP Headers
     app.use(helmet());
