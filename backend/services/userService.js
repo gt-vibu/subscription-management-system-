@@ -84,47 +84,75 @@ const createUserAccount = async (name, email, password, role) => {
     throw new AppError('Email is already registered.', 400);
   }
 
-  const { generateAndSendOtp } = require('./authService');
-
   const newUser = new User({
     name,
     email,
     password,
     role,
     isActive: true,
-    isVerified: false
+    isVerified: true
   });
 
-  await generateAndSendOtp(newUser);
+  await newUser.save();
 
   const userObj = newUser.toObject();
   delete userObj.password;
-  delete userObj.verificationOtpHash;
-  delete userObj.verificationOtpExpires;
   return userObj;
 };
 
 /**
  * Manually change/override a user's subscription (Super Admin only)
  */
-const changeUserSubscription = async (targetUserId, planId, months = 1) => {
+const changeUserSubscription = async (targetUserId, planIdOrData, months = 1) => {
   const user = await User.findById(targetUserId);
   if (!user) {
     throw new AppError('User not found', 404);
   }
 
+  // Handle case where planIdOrData is an object (new behavior)
+  if (planIdOrData && typeof planIdOrData === 'object') {
+    const { action, planId, subscriptionId, months: optMonths } = planIdOrData;
+    const finalMonths = optMonths ? Number(optMonths) : months;
+
+    if (action === 'subscribe') {
+      if (!planId) {
+        throw new AppError('Plan ID is required to subscribe.', 400);
+      }
+      const sub = await subscriptionService.subscribe(targetUserId, planId, finalMonths);
+      return { status: 'CREATED', subscription: sub };
+    }
+
+    if (action === 'cancel') {
+      if (!subscriptionId) {
+        throw new AppError('Subscription ID is required to cancel.', 400);
+      }
+      const sub = await subscriptionService.cancelSubscription(targetUserId, subscriptionId);
+      return { status: 'CANCELLED', subscription: sub };
+    }
+
+    if (action === 'change') {
+      if (!subscriptionId || !planId) {
+        throw new AppError('Subscription ID and Plan ID are required to change subscription.', 400);
+      }
+      const result = await subscriptionService.changeSubscriptionPlan(targetUserId, subscriptionId, planId, finalMonths);
+      return { status: 'UPDATED', subscription: result.subscription };
+    }
+  }
+
+  // Legacy fallback (when planIdOrData is a string or null representing planId)
+  const planId = planIdOrData;
   const activeSub = await subscriptionService.getActiveSubscriptionByUserId(targetUserId);
 
   if (!planId) {
     if (!activeSub) {
       throw new AppError('User does not have an active subscription to cancel.', 400);
     }
-    await subscriptionService.cancelSubscription(targetUserId);
+    await subscriptionService.cancelSubscription(targetUserId, activeSub._id);
     return { status: 'CANCELLED' };
   }
 
   if (activeSub) {
-    const result = await subscriptionService.changeSubscriptionPlan(targetUserId, planId, months);
+    const result = await subscriptionService.changeSubscriptionPlan(targetUserId, activeSub._id, planId, months);
     return { status: 'UPDATED', subscription: result.subscription };
   } else {
     const sub = await subscriptionService.subscribe(targetUserId, planId, months);
@@ -132,10 +160,42 @@ const changeUserSubscription = async (targetUserId, planId, months = 1) => {
   }
 };
 
+/**
+ * Deactivate a user account (Admin / Super Admin)
+ */
+const deactivateUser = async (targetUserId, actorId, actorRole) => {
+  // Prevent self-deactivation
+  if (targetUserId.toString() === actorId.toString()) {
+    throw new AppError('You cannot deactivate your own account.', 400);
+  }
+
+  const user = await User.findById(targetUserId);
+  if (!user) {
+    throw new AppError('User not found', 404);
+  }
+
+  // Prevent Admin from deactivating Super Admin accounts
+  if (actorRole === 'ADMIN' && user.role === 'SUPER_ADMIN') {
+    throw new AppError('Admins cannot deactivate Super Admin accounts.', 403);
+  }
+
+  if (!user.isActive) {
+    throw new AppError('User account is already deactivated.', 400);
+  }
+
+  user.isActive = false;
+  await user.save();
+
+  const userObj = user.toObject();
+  delete userObj.password;
+  return userObj;
+};
+
 module.exports = {
   getUsers,
   changeRole,
   deleteUser,
   createUserAccount,
-  changeUserSubscription
+  changeUserSubscription,
+  deactivateUser
 };

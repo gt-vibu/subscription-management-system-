@@ -5,14 +5,17 @@ const { restrictTo } = require('../middlewares/roleMiddleware');
 
 const router = express.Router();
 
-// Apply super admin protection globally on this router
+// All user-management routes require authentication
 router.use(protect);
-router.use(restrictTo('SUPER_ADMIN'));
 
-router.get('/', userController.getUsersList);
-router.post('/', userController.createUser);
-router.patch('/:id/role', userController.changeUserRole);
-router.patch('/:id/subscription', userController.updateUserSubscription);
-router.delete('/:id', userController.deleteUser);
+// --- Routes accessible to ADMIN and SUPER_ADMIN ---
+router.get('/', restrictTo('ADMIN', 'SUPER_ADMIN'), userController.getUsersList);
+router.patch('/:id/subscription', restrictTo('ADMIN', 'SUPER_ADMIN'), userController.updateUserSubscription);
+router.patch('/:id/deactivate', restrictTo('ADMIN', 'SUPER_ADMIN'), userController.deactivateUser);
+
+// --- Routes restricted to SUPER_ADMIN only ---
+router.post('/', restrictTo('SUPER_ADMIN'), userController.createUser);
+router.patch('/:id/role', restrictTo('SUPER_ADMIN'), userController.changeUserRole);
+router.delete('/:id', restrictTo('SUPER_ADMIN'), userController.deleteUser);
 
 module.exports = router;

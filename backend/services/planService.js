@@ -37,8 +37,9 @@ const createPlan = async (planData) => {
 
 /**
  * Update plan details and log price updates
+ * Supports optional retroactive pricing toggle that adjusts active subscriptions
  */
-const updatePlan = async (planId, updateData, actorId) => {
+const updatePlan = async (planId, updateData, actorId, actorRole) => {
   const plan = await Plan.findById(planId);
   if (!plan) {
     throw new AppError('Plan not found', 404);
@@ -54,13 +55,36 @@ const updatePlan = async (planId, updateData, actorId) => {
       planName: plan.name,
       oldPrice,
       newPrice,
-      changedBy: actorId
+      changedBy: actorId,
+      actorRole: actorRole || 'SUPER_ADMIN'
     });
+
+    // Retroactive pricing: adjust active subscriptions if flag is set
+    if (updateData.retroactive === true && oldPrice > 0) {
+      const Subscription = require('../models/Subscription');
+      const activeSubscriptions = await Subscription.find({
+        plan: plan._id,
+        status: 'ACTIVE'
+      });
+
+      const priceRatio = oldPrice / newPrice; // > 1 means price decreased (extend), < 1 means price increased (shorten)
+
+      for (const sub of activeSubscriptions) {
+        const now = new Date();
+        const remainingMs = sub.endDate.getTime() - now.getTime();
+        if (remainingMs > 0) {
+          const adjustedRemainingMs = Math.round(remainingMs * priceRatio);
+          sub.endDate = new Date(now.getTime() + adjustedRemainingMs);
+          await sub.save();
+        }
+      }
+    }
   }
 
-  // Update plan fields
-  Object.keys(updateData).forEach((key) => {
-    plan[key] = updateData[key];
+  // Update plan fields (exclude retroactive flag from being saved to the plan document)
+  const { retroactive, ...fieldsToUpdate } = updateData;
+  Object.keys(fieldsToUpdate).forEach((key) => {
+    plan[key] = fieldsToUpdate[key];
   });
 
   return await plan.save();
@@ -68,6 +92,7 @@ const updatePlan = async (planId, updateData, actorId) => {
 
 /**
  * Archive a subscription plan (sets status to 'ARCHIVED')
+ * Includes active subscriber count for pre-archive confirmation
  */
 const archivePlan = async (planId) => {
   const plan = await Plan.findById(planId);
@@ -79,8 +104,20 @@ const archivePlan = async (planId) => {
     throw new AppError('Plan is already archived', 400);
   }
 
+  // Count active subscribers on this plan for confirmation
+  const Subscription = require('../models/Subscription');
+  const activeSubscriberCount = await Subscription.countDocuments({
+    plan: plan._id,
+    status: 'ACTIVE'
+  });
+
   plan.status = 'ARCHIVED';
-  return await plan.save();
+  const archivedPlan = await plan.save();
+
+  // Return plan with subscriber count metadata
+  const result = archivedPlan.toObject();
+  result.activeSubscriberCount = activeSubscriberCount;
+  return result;
 };
 
 /**

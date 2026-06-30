@@ -17,7 +17,17 @@ const calculateEndDate = (billingCycle, startDate = new Date(), months = 1) => {
 };
 
 /**
- * Get active subscription for a specific user
+ * Get all active subscriptions for a specific user (supports multi-subscription)
+ */
+const getActiveSubscriptionsByUserId = async (userId) => {
+  return await Subscription.find({
+    user: userId,
+    status: 'ACTIVE'
+  }).populate('plan');
+};
+
+/**
+ * Get a single active subscription (legacy helper — returns first match)
  */
 const getActiveSubscriptionByUserId = async (userId) => {
   return await Subscription.findOne({
@@ -27,10 +37,10 @@ const getActiveSubscriptionByUserId = async (userId) => {
 };
 
 /**
- * Get subscription details & history for a user
+ * Get subscription details & history for a user (multi-subscription aware)
  */
 const getUserSubscriptionDetails = async (userId) => {
-  const active = await getActiveSubscriptionByUserId(userId);
+  const active = await getActiveSubscriptionsByUserId(userId);
   const history = await Subscription.find({
     user: userId,
     status: { $ne: 'ACTIVE' }
@@ -40,13 +50,17 @@ const getUserSubscriptionDetails = async (userId) => {
 };
 
 /**
- * Subscribe a user to a plan
+ * Subscribe a user to a plan (allows multiple active subscriptions on different plans)
  */
 const subscribe = async (userId, planId, months = 1) => {
-  // Check if user already has an active subscription
-  const existingActive = await getActiveSubscriptionByUserId(userId);
-  if (existingActive) {
-    throw new AppError('You already have an active subscription. Use Upgrade/Downgrade instead.', 400);
+  // Check if user already has an active subscription on the SAME plan
+  const existingOnSamePlan = await Subscription.findOne({
+    user: userId,
+    plan: planId,
+    status: 'ACTIVE'
+  });
+  if (existingOnSamePlan) {
+    throw new AppError('You are already subscribed to this plan. Choose a different plan or cancel first.', 400);
   }
 
   // Fetch the plan
@@ -72,16 +86,31 @@ const subscribe = async (userId, planId, months = 1) => {
 };
 
 /**
- * Upgrade or Downgrade subscription (switches plan)
+ * Change a specific active subscription to a new plan
  */
-const changeSubscriptionPlan = async (userId, newPlanId, months = 1) => {
-  const activeSub = await getActiveSubscriptionByUserId(userId);
+const changeSubscriptionPlan = async (userId, subscriptionId, newPlanId, months = 1) => {
+  const activeSub = await Subscription.findOne({
+    _id: subscriptionId,
+    user: userId,
+    status: 'ACTIVE'
+  }).populate('plan');
+
   if (!activeSub) {
-    throw new AppError('You do not have an active subscription to change. Please subscribe first.', 400);
+    throw new AppError('Active subscription not found.', 400);
   }
 
   if (activeSub.plan._id.toString() === newPlanId.toString()) {
     throw new AppError('You are already subscribed to this plan.', 400);
+  }
+
+  // Check if user already has an active sub on the target plan
+  const existingOnTarget = await Subscription.findOne({
+    user: userId,
+    plan: newPlanId,
+    status: 'ACTIVE'
+  });
+  if (existingOnTarget) {
+    throw new AppError('You already have an active subscription on the target plan.', 400);
   }
 
   // Fetch the new plan
@@ -98,8 +127,7 @@ const changeSubscriptionPlan = async (userId, newPlanId, months = 1) => {
   const isUpgrade = newPlan.price > activeSub.plan.price;
   const actionType = isUpgrade ? 'upgrade' : 'downgrade';
 
-  // For simplicity and clean accounting, we mark the previous active subscription as EXPIRED/CANCELLED
-  // and start a fresh subscription cycle for the new plan
+  // Mark previous active subscription as EXPIRED and start a fresh cycle
   activeSub.status = 'EXPIRED';
   await activeSub.save();
 
@@ -121,10 +149,17 @@ const changeSubscriptionPlan = async (userId, newPlanId, months = 1) => {
 };
 
 /**
- * Cancel user's active subscription
+ * Cancel a specific active subscription by subscription ID
  */
-const cancelSubscription = async (userId) => {
-  const activeSub = await getActiveSubscriptionByUserId(userId);
+const cancelSubscription = async (userId, subscriptionId) => {
+  const query = { user: userId, status: 'ACTIVE' };
+
+  // If subscriptionId is provided, cancel that specific one
+  if (subscriptionId) {
+    query._id = subscriptionId;
+  }
+
+  const activeSub = await Subscription.findOne(query);
   if (!activeSub) {
     throw new AppError('No active subscription found to cancel.', 400);
   }
@@ -149,5 +184,6 @@ module.exports = {
   cancelSubscription,
   getUserSubscriptionDetails,
   getAllSubscriptions,
-  getActiveSubscriptionByUserId
+  getActiveSubscriptionByUserId,
+  getActiveSubscriptionsByUserId
 };

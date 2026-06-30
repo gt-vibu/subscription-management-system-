@@ -42,13 +42,7 @@ const userSchema = new mongoose.Schema(
     },
     isVerified: {
       type: Boolean,
-      default: false
-    },
-    verificationOtpHash: {
-      type: String
-    },
-    verificationOtpExpires: {
-      type: Date
+      default: true
     }
   },
   {

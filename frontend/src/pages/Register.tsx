@@ -105,23 +105,13 @@ export const Register: React.FC = () => {
   const onSubmit = async (data: RegisterSchemaType) => {
     setLoading(true);
     try {
-      const result = await signUp(data.name, data.email, data.password);
-      
-      if (result && !result.isVerified) {
-        toast({
-          title: 'Verification Required',
-          description: 'A 6-digit OTP verification code has been sent to your email.',
-          variant: 'default',
-        });
-        navigate('/verify-email', { state: { email: data.email } });
-      } else {
-        toast({
-          title: 'Registration Successful',
-          description: 'Your account was successfully verified and created.',
-          variant: 'success',
-        });
-        navigate('/dashboard');
-      }
+      await signUp(data.name, data.email, data.password);
+      toast({
+        title: 'Registration Successful',
+        description: 'Your account was successfully created.',
+        variant: 'success',
+      });
+      navigate('/dashboard');
     } catch (err: any) {
       toast({
         title: 'Registration Failed',

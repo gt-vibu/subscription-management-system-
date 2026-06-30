@@ -12,7 +12,7 @@ import { Badge } from '../components/ui/Badge';
 import { Dialog } from '../components/ui/Dialog';
 import { TableSkeleton, CardSkeleton } from '../components/ui/Skeletons';
 import { Shield, Users, DollarSign, Database, Search, ArrowLeft, ArrowRight, Trash2, UserPlus, CreditCard, Sparkles, CheckCircle, XCircle } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Cell } from 'recharts';
 
 export const SuperAdminDashboard: React.FC = () => {
@@ -135,7 +135,7 @@ export const SuperAdminDashboard: React.FC = () => {
 
     setUpdatingRoleId(userId);
     try {
-      await userService.changeUserRole(userId, newRole);
+      await userService.changeRole(userId, newRole);
       toast({
         title: 'Permissions Promoted',
         description: `Successfully switched user role to ${newRole}.`,
@@ -282,36 +282,71 @@ export const SuperAdminDashboard: React.FC = () => {
   const handleOpenManageSub = (user: User) => {
     setSubSelectedUser(user);
     setSubOverrideMonths(1);
-    // Find if user has an active subscription
-    const userActiveSub = allSubscriptions.find(
-      (s) => (s.user as any)?._id === user._id && s.status === 'ACTIVE'
-    );
-    setSubSelectedPlanId(userActiveSub?.plan?._id || 'none');
+    setSubSelectedPlanId('none');
     setIsManageSubOpen(true);
   };
 
-  const handleManageSubSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleCancelUserSubscription = async (subscriptionId: string, planName: string) => {
     if (!subSelectedUser) return;
+    if (!window.confirm(`Are you sure you want to cancel ${subSelectedUser.name}'s "${planName}" subscription?`)) {
+      return;
+    }
 
     setUpdatingSub(true);
     try {
-      const planIdArg = subSelectedPlanId === 'none' ? null : subSelectedPlanId;
-      await userService.updateUserSubscription(subSelectedUser._id, planIdArg, subOverrideMonths);
-
+      await userService.updateUserSubscription(subSelectedUser._id, null, undefined, 'cancel', subscriptionId);
       toast({
-        title: 'Subscription Adjusted',
-        description: `Successfully updated subscription details for ${subSelectedUser.name}`,
+        title: 'Subscription Cancelled',
+        description: `Successfully cancelled "${planName}" for ${subSelectedUser.name}.`,
         variant: 'success'
       });
-      setIsManageSubOpen(false);
       await fetchUsers();
       await fetchSubscriptionsAndPlans();
       await fetchStatsAndLogs();
     } catch (err: any) {
       toast({
-        title: 'Override Failed',
-        description: err.message || 'Could not modify user subscription.',
+        title: 'Cancellation Failed',
+        description: err.message || 'Could not cancel user subscription.',
+        variant: 'destructive'
+      });
+    } finally {
+      setUpdatingSub(false);
+    }
+  };
+
+  const handleAddUserSubscriptionSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!subSelectedUser || !subSelectedPlanId || subSelectedPlanId === 'none') {
+      toast({
+        title: 'Validation Error',
+        description: 'Please select a plan to add.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    setUpdatingSub(true);
+    try {
+      await userService.updateUserSubscription(
+        subSelectedUser._id,
+        subSelectedPlanId,
+        subOverrideMonths,
+        'subscribe'
+      );
+      toast({
+        title: 'Subscription Added',
+        description: `Successfully subscribed ${subSelectedUser.name} to the selected plan.`,
+        variant: 'success'
+      });
+      setSubSelectedPlanId('none');
+      setSubOverrideMonths(1);
+      await fetchUsers();
+      await fetchSubscriptionsAndPlans();
+      await fetchStatsAndLogs();
+    } catch (err: any) {
+      toast({
+        title: 'Subscription Action Failed',
+        description: err.message || 'Could not subscribe user to plan.',
         variant: 'destructive'
       });
     } finally {
@@ -669,7 +704,7 @@ export const SuperAdminDashboard: React.FC = () => {
                 <tbody className="divide-y divide-white/5">
                   {users.map((u, idx) => {
                     const isSelf = u._id === currentUser?._id;
-                    const userSub = allSubscriptions.find(
+                    const userActiveSubs = allSubscriptions.filter(
                       (s) => (s.user as any)?._id === u._id && s.status === 'ACTIVE'
                     );
 
@@ -700,13 +735,21 @@ export const SuperAdminDashboard: React.FC = () => {
                           </Badge>
                         </td>
                         <td className="px-6 py-4">
-                          {userSub ? (
-                            <Badge variant="outline" className="text-[10px] font-bold border-emerald-500/20 bg-emerald-500/5 text-emerald-400">
-                              {userSub.plan?.name || 'Active'}
-                            </Badge>
-                          ) : (
-                            <span className="text-xs text-zinc-500">None</span>
-                          )}
+                          <div className="flex flex-wrap gap-1.5 max-w-[200px]">
+                            {userActiveSubs.length > 0 ? (
+                              userActiveSubs.map((sub) => (
+                                <Badge
+                                  key={sub._id}
+                                  variant="outline"
+                                  className="text-[10px] font-bold border-emerald-500/20 bg-emerald-500/5 text-emerald-400"
+                                >
+                                  {sub.plan?.name || 'Active'}
+                                </Badge>
+                              ))
+                            ) : (
+                              <span className="text-xs text-zinc-500">None</span>
+                            )}
+                          </div>
                         </td>
                         <td className="px-6 py-4 text-right">
                           <div className="flex items-center justify-end space-x-3">
@@ -929,66 +972,122 @@ export const SuperAdminDashboard: React.FC = () => {
       </Dialog>
 
       {/* dialog for manual plan overrides */}
-      <Dialog isOpen={isManageSubOpen} onClose={() => setIsManageSubOpen(false)} title="Modify User Subscription Plan">
+      <Dialog isOpen={isManageSubOpen} onClose={() => setIsManageSubOpen(false)} title="Manage User Subscriptions">
         {subSelectedUser && (
-          <form onSubmit={handleManageSubSubmit} className="space-y-4">
+          <div className="space-y-6">
             <div>
               <p className="text-sm font-semibold text-white">{subSelectedUser.name}</p>
               <p className="text-xs text-zinc-500">{subSelectedUser.email}</p>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Target Subscription Plan</label>
-              <select
-                value={subSelectedPlanId}
-                onChange={(e) => setSubSelectedPlanId(e.target.value)}
-                className="w-full h-10 rounded-md border border-white/10 bg-zinc-950 px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-purple-500"
-              >
-                <option value="none">None (Deactivate / Cancel Subscription)</option>
-                {availablePlans.map((p) => (
-                  <option key={p._id} value={p._id}>
-                    {p.name} - ${(p.price / 100).toFixed(2)} ({p.billingCycle.toLowerCase()})
-                  </option>
-                ))}
-              </select>
-              <p className="text-[11px] text-zinc-500 mt-1">
-                Applying a plan override will immediately update the user's active billing cycle and create a corresponding transaction audit record. Selecting 'None' will terminate their active plan.
-              </p>
-            </div>
+            {/* Active Subscriptions List */}
+            <div className="space-y-3">
+              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider block">Active Subscriptions</label>
+              {(() => {
+                const activeSubs = allSubscriptions.filter(
+                  (s) => (s.user as any)?._id === subSelectedUser._id && s.status === 'ACTIVE'
+                );
 
-            {/* Customizable Duration (Monthly only) */}
-            {(() => {
-              const selectedPlanObj = availablePlans.find((p) => p._id === subSelectedPlanId);
-              const isMonthlyPlan = selectedPlanObj?.billingCycle === 'MONTHLY';
-              if (!isMonthlyPlan) return null;
+                if (activeSubs.length === 0) {
+                  return (
+                    <div className="text-xs text-zinc-500 border border-dashed border-white/10 rounded-xl p-4 text-center bg-zinc-950/40">
+                      No active subscriptions.
+                    </div>
+                  );
+                }
 
-              return (
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Duration (months)</label>
-                  <select
-                    value={subOverrideMonths}
-                    onChange={(e) => setSubOverrideMonths(Number(e.target.value))}
-                    className="w-full h-10 rounded-md border border-white/10 bg-zinc-950 px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-purple-500"
-                  >
-                    {[1, 2, 3, 6, 12].map((m) => (
-                      <option key={m} value={m}>
-                        {m} {m === 1 ? 'Month' : 'Months'}
-                      </option>
+                return (
+                  <div className="space-y-2 max-h-[200px] overflow-y-auto pr-1">
+                    {activeSubs.map((sub) => (
+                      <div key={sub._id} className="flex justify-between items-center bg-white/[0.02] border border-white/5 rounded-xl p-3 text-xs">
+                        <div className="space-y-0.5">
+                          <p className="font-semibold text-white">{sub.plan?.name || 'Unknown Plan'}</p>
+                          <p className="text-[10px] text-zinc-400">
+                            ${sub.plan ? (sub.plan.price / 100).toFixed(2) : '0'} / {sub.plan?.billingCycle.toLowerCase()} • Renews {new Date(sub.endDate).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          className="h-8 text-xs font-semibold px-3"
+                          disabled={updatingSub}
+                          onClick={() => handleCancelUserSubscription(sub._id, sub.plan?.name || '')}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
                     ))}
-                  </select>
-                </div>
-              );
-            })()}
-
-            <div className="flex justify-end space-x-2 pt-4 border-t border-white/5">
-              <Button type="button" variant="outline" onClick={() => setIsManageSubOpen(false)} className="border-white/10 hover:bg-white/5">
-                Cancel
-              </Button>
-              <Button type="submit" disabled={updatingSub} className="bg-white text-black hover:bg-zinc-200">
-                {updatingSub ? 'Updating...' : 'Apply Override'}
-              </Button>
+                  </div>
+                );
+              })()}
             </div>
-          </form>
+
+            {/* Add Subscription Form */}
+            <form onSubmit={handleAddUserSubscriptionSubmit} className="space-y-4 border-t border-white/5 pt-4">
+              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider block">Add New Subscription</label>
+              
+              <div className="space-y-2">
+                <select
+                  value={subSelectedPlanId}
+                  onChange={(e) => setSubSelectedPlanId(e.target.value)}
+                  className="w-full h-10 rounded-md border border-white/10 bg-zinc-950 px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-purple-500"
+                >
+                  <option value="none">Select plan to add...</option>
+                  {(() => {
+                    const activeSubs = allSubscriptions.filter(
+                      (s) => (s.user as any)?._id === subSelectedUser._id && s.status === 'ACTIVE'
+                    );
+                    // Filter out plans the user is already subscribed to
+                    const unsubscribedPlans = availablePlans.filter(
+                      (p) => !activeSubs.some((sub) => sub.plan?._id === p._id)
+                    );
+                    return unsubscribedPlans.map((p) => (
+                      <option key={p._id} value={p._id}>
+                        {p.name} - ${(p.price / 100).toFixed(2)} ({p.billingCycle.toLowerCase()})
+                      </option>
+                    ));
+                  })()}
+                </select>
+              </div>
+
+              {/* Customizable Duration (Monthly only) */}
+              {(() => {
+                const selectedPlanObj = availablePlans.find((p) => p._id === subSelectedPlanId);
+                const isMonthlyPlan = selectedPlanObj?.billingCycle === 'MONTHLY';
+                if (!isMonthlyPlan) return null;
+
+                return (
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider block">Duration (months)</label>
+                    <select
+                      value={subOverrideMonths}
+                      onChange={(e) => setSubOverrideMonths(Number(e.target.value))}
+                      className="w-full h-10 rounded-md border border-white/10 bg-zinc-950 px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-purple-500"
+                    >
+                      {[1, 2, 3, 6, 12].map((m) => (
+                        <option key={m} value={m}>
+                          {m} {m === 1 ? 'Month' : 'Months'}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                );
+              })()}
+
+              <div className="flex justify-end space-x-2 pt-2">
+                <Button type="button" variant="outline" onClick={() => setIsManageSubOpen(false)} className="border-white/10 hover:bg-white/5">
+                  Close
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={updatingSub || subSelectedPlanId === 'none'}
+                  className="bg-white text-black hover:bg-zinc-200"
+                >
+                  {updatingSub ? 'Adding...' : 'Add Subscription'}
+                </Button>
+              </div>
+            </form>
+          </div>
         )}
       </Dialog>
     </motion.div>

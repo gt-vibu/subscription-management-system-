@@ -43,20 +43,11 @@ export const Login: React.FC = () => {
       });
       navigate(from, { replace: true });
     } catch (err: any) {
-      if (err.status === 403 && err.message?.toLowerCase().includes('verify')) {
-        toast({
-          title: 'Verification Required',
-          description: err.message,
-          variant: 'default',
-        });
-        navigate('/verify-email', { state: { email: data.email } });
-      } else {
-        toast({
-          title: 'Authentication Failed',
-          description: err.message || 'Incorrect email or password.',
-          variant: 'destructive',
-        });
-      }
+      toast({
+        title: 'Authentication Failed',
+        description: err.message || 'Incorrect email or password.',
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }

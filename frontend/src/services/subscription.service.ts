@@ -2,7 +2,7 @@ import client from '../api/client';
 import type { Subscription } from '../types';
 
 export interface UserSubscriptionDetails {
-  active: Subscription | null;
+  active: Subscription[];
   history: Subscription[];
 }
 
@@ -17,13 +17,13 @@ export const subscriptionService = {
     return response.data.data;
   },
 
-  async changePlan(planId: string, months?: number): Promise<Subscription> {
-    const response = await client.post('/subscriptions/change', { planId, months });
+  async changePlan(subscriptionId: string, planId: string, months?: number): Promise<Subscription> {
+    const response = await client.post('/subscriptions/change', { subscriptionId, planId, months });
     return response.data.data;
   },
 
-  async cancelSubscription(): Promise<Subscription> {
-    const response = await client.post('/subscriptions/cancel');
+  async cancelSubscription(subscriptionId: string): Promise<Subscription> {
+    const response = await client.post('/subscriptions/cancel', { subscriptionId });
     return response.data.data;
   },
 

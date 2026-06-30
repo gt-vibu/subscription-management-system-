@@ -16,7 +16,7 @@ export const Catalog: React.FC = () => {
   const { toast } = useToast();
 
   const [plans, setPlans] = useState<Plan[]>([]);
-  const [activeSub, setActiveSub] = useState<Subscription | null>(null);
+  const [activeSubs, setActiveSubs] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(true);
   const [submittingId, setSubmittingId] = useState<string | null>(null);
   const [selectedMonths, setSelectedMonths] = useState<Record<string, number>>({});
@@ -31,10 +31,10 @@ export const Catalog: React.FC = () => {
         const plansList = await planService.getPlans();
         setPlans(plansList);
 
-        // Fetch current subscription if logged in
+        // Fetch current subscriptions if logged in as USER
         if (user && user.role === 'USER') {
           const details = await subscriptionService.getMySubscription();
-          setActiveSub(details.active);
+          setActiveSubs(details.active || []);
         }
       } catch (err: any) {
         toast({
@@ -48,6 +48,11 @@ export const Catalog: React.FC = () => {
     };
     fetchData();
   }, [user, toast]);
+
+  // Check if user is already subscribed to a specific plan
+  const isSubscribedToPlan = (planId: string) => {
+    return activeSubs.some(sub => sub.plan?._id === planId);
+  };
 
   const handleAction = async (plan: Plan) => {
     if (!user) {
@@ -68,27 +73,24 @@ export const Catalog: React.FC = () => {
       return;
     }
 
+    if (isSubscribedToPlan(plan._id)) {
+      toast({
+        title: 'Already Subscribed',
+        description: `You are already subscribed to ${plan.name}. Go to your dashboard to manage it.`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
     const months = selectedMonths[plan._id] || 1;
     setSubmittingId(plan._id);
     try {
-      if (!activeSub) {
-        const newSub = await subscriptionService.subscribe(plan._id, months);
-        setActiveSub(newSub);
-        toast({
-          title: 'Subscription Activated!',
-          description: `You are now subscribed to the ${plan.name} plan for ${months} ${months === 1 ? 'month' : 'months'}.`,
-          variant: 'success',
-        });
-      } else {
-        const updatedSub = await subscriptionService.changePlan(plan._id, months);
-        setActiveSub(updatedSub);
-        const isUpgrade = plan.price > activeSub.plan.price;
-        toast({
-          title: isUpgrade ? 'Upgraded successfully!' : 'Downgraded successfully!',
-          description: `Your subscription has been switched to ${plan.name} for ${months} ${months === 1 ? 'month' : 'months'}.`,
-          variant: 'success',
-        });
-      }
+      await subscriptionService.subscribe(plan._id, months);
+      toast({
+        title: 'Subscription Activated!',
+        description: `You are now subscribed to the ${plan.name} plan for ${months} ${months === 1 ? 'month' : 'months'}.`,
+        variant: 'success',
+      });
       navigate('/dashboard');
     } catch (err: any) {
       toast({
@@ -129,7 +131,7 @@ export const Catalog: React.FC = () => {
           SaaS Pricing Plans
         </h1>
         <p className="text-md text-muted-foreground leading-relaxed">
-          Choose the billing plan that fits your business. Upgrade, downgrade, or cancel anytime.
+          Subscribe to multiple plans to unlock different feature sets. Manage all from your dashboard.
         </p>
       </div>
 
@@ -166,6 +168,16 @@ export const Catalog: React.FC = () => {
         </div>
       </div>
 
+      {/* Active Subscriptions Count */}
+      {activeSubs.length > 0 && (
+        <div className="text-center">
+          <span className="text-xs text-muted-foreground bg-white/5 border border-white/10 rounded-full px-4 py-1.5 inline-flex items-center gap-1.5">
+            <Sparkles className="h-3 w-3 text-purple-400" />
+            You have <span className="font-bold text-white">{activeSubs.length}</span> active {activeSubs.length === 1 ? 'subscription' : 'subscriptions'}
+          </span>
+        </div>
+      )}
+
       {/* Catalog Cards Grid */}
       {filteredPlans.length === 0 ? (
         <div className="text-center py-12 border border-dashed rounded-xl max-w-2xl mx-auto space-y-4 glass-card">
@@ -190,19 +202,14 @@ export const Catalog: React.FC = () => {
           }}
         >
           {filteredPlans.map((plan) => {
-            const isCurrent = activeSub?.plan?._id === plan._id;
+            const alreadySubscribed = isSubscribedToPlan(plan._id);
             
-            // Determine button labels
             let btnLabel = 'Subscribe';
             let btnVariant: 'default' | 'outline' | 'secondary' = 'default';
             
-            if (isCurrent) {
-              btnLabel = 'Current Plan';
+            if (alreadySubscribed) {
+              btnLabel = 'Subscribed ✓';
               btnVariant = 'secondary';
-            } else if (activeSub) {
-              const isUpgrade = plan.price > activeSub.plan.price;
-              btnLabel = isUpgrade ? 'Upgrade' : 'Downgrade';
-              btnVariant = 'outline';
             }
 
             const isPro = plan.name.toLowerCase().includes('pro');
@@ -221,7 +228,7 @@ export const Catalog: React.FC = () => {
                   borderColor: 'rgba(147, 51, 234, 0.35)'
                 }}
                 className={`relative flex flex-col justify-between rounded-2xl border bg-card/65 backdrop-blur-md glass-card p-8 shadow-sm transition-all duration-300 ${
-                  isCurrent ? 'ring-2 ring-purple-500 border-purple-500/40' : 'border-border/30'
+                  alreadySubscribed ? 'ring-2 ring-purple-500 border-purple-500/40' : 'border-border/30'
                 }`}
               >
                 {/* Popular Badge indicator with float & icon */}
@@ -265,7 +272,7 @@ export const Catalog: React.FC = () => {
                   </ul>
 
                   {/* Customizable Duration (Monthly only) */}
-                  {plan.billingCycle === 'MONTHLY' && !isCurrent && (
+                  {plan.billingCycle === 'MONTHLY' && !alreadySubscribed && (
                     <div className="mt-6 flex items-center justify-between border-t border-border/10 pt-4">
                       <span className="text-xs text-zinc-400 font-medium">Duration:</span>
                       <select
@@ -292,10 +299,10 @@ export const Catalog: React.FC = () => {
                     onClick={() => handleAction(plan)}
                     className="w-full shadow-sm text-xs font-semibold py-2.5"
                     variant={btnVariant}
-                    disabled={!!(user && user.role !== 'USER')}
+                    disabled={!!(user && user.role !== 'USER') || alreadySubscribed}
                     loading={submittingId === plan._id}
                   >
-                    {isCurrent ? 'Current Plan' : btnLabel}
+                    {btnLabel}
                   </Button>
                   {user && user.role !== 'USER' && (
                     <p className="text-[10px] text-center text-muted-foreground mt-2">
@@ -312,4 +319,3 @@ export const Catalog: React.FC = () => {
   );
 };
 export default Catalog;
-

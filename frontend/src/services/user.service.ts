@@ -32,8 +32,19 @@ export const userService = {
     return response.data.data;
   },
 
-  async updateUserSubscription(userId: string, planId: string | null, months?: number): Promise<any> {
-    const response = await client.patch(`/users/${userId}/subscription`, { planId, months });
+  async updateUserSubscription(
+    userId: string,
+    planId: string | null,
+    months?: number,
+    action?: 'subscribe' | 'cancel' | 'change',
+    subscriptionId?: string
+  ): Promise<any> {
+    const response = await client.patch(`/users/${userId}/subscription`, {
+      planId,
+      months,
+      action,
+      subscriptionId
+    });
     return response.data.data;
   }
 };

@@ -10,8 +10,6 @@ interface AuthContextType {
   register: (name: string, email: string, password: string) => Promise<any>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
-  verifyEmail: (email: string, otp: string) => Promise<User>;
-  resendOtp: (email: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -53,11 +51,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setLoading(true);
     try {
       const registeredUser = await authService.register(name, email, password);
-      if (registeredUser.isVerified) {
-        setUser(registeredUser);
-      } else {
-        setUser(null);
-      }
+      setUser(registeredUser);
       return registeredUser;
     } catch (err) {
       setUser(null);
@@ -88,23 +82,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const verifyEmail = async (email: string, otp: string) => {
-    setLoading(true);
-    try {
-      const verifiedUser = await authService.verifyEmail(email, otp);
-      setUser(verifiedUser);
-      return verifiedUser;
-    } catch (err) {
-      setUser(null);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  const resendOtp = async (email: string) => {
-    await authService.resendOtp(email);
-  };
 
   return (
     <AuthContext.Provider
@@ -114,9 +92,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         login,
         register,
         logout,
-        refreshUser,
-        verifyEmail,
-        resendOtp
+        refreshUser
       }}
     >
       {children}

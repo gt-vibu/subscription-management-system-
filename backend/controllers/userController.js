@@ -90,12 +90,36 @@ const createUser = async (req, res, next) => {
  */
 const updateUserSubscription = async (req, res, next) => {
   try {
-    const { planId, months } = req.body; // Can be null/empty to cancel subscription
+    const { planId, months, action, subscriptionId } = req.body;
     const targetUserId = req.params.id;
 
-    const result = await userService.changeUserSubscription(targetUserId, planId, months ? Number(months) : undefined);
+    const result = await userService.changeUserSubscription(targetUserId, {
+      action,
+      planId,
+      subscriptionId,
+      months: months ? Number(months) : undefined
+    });
 
     return sendResponse(res, 200, result, 'User subscription successfully modified');
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Deactivate a user account (Admin / Super Admin)
+ */
+const deactivateUser = async (req, res, next) => {
+  try {
+    const targetUserId = req.params.id;
+
+    const deactivatedUser = await userService.deactivateUser(
+      targetUserId,
+      req.user._id,
+      req.user.role
+    );
+
+    return sendResponse(res, 200, deactivatedUser, 'User account deactivated successfully');
   } catch (error) {
     next(error);
   }
@@ -106,5 +130,6 @@ module.exports = {
   changeUserRole,
   deleteUser,
   createUser,
-  updateUserSubscription
+  updateUserSubscription,
+  deactivateUser
 };

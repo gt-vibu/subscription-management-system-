@@ -4,30 +4,19 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/useToast';
 import subscriptionService from '../services/subscription.service';
 import type { UserSubscriptionDetails } from '../services/subscription.service';
+import type { Subscription } from '../types';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { TableSkeleton } from '../components/ui/Skeletons';
-import { CreditCard, Calendar, AlertTriangle, ArrowRight, User as UserIcon, Sparkles, Shield, TrendingUp, CheckCircle } from 'lucide-react';
-import { motion, useMotionValue, useTransform } from 'framer-motion';
+import { CreditCard, Calendar, AlertTriangle, User as UserIcon, Sparkles, Shield, TrendingUp, CheckCircle, Plus } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export const UserDashboard: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [data, setData] = useState<UserSubscriptionDetails | null>(null);
   const [loading, setLoading] = useState(true);
-  const [cancelling, setCancelling] = useState(false);
-
-  // Mouse tilt motion values for Profile Card (Card 1)
-  const x1 = useMotionValue(0);
-  const y1 = useMotionValue(0);
-  const rotateX1 = useTransform(y1, [-150, 150], [8, -8]);
-  const rotateY1 = useTransform(x1, [-150, 150], [-8, 8]);
-
-  // Mouse tilt motion values for Current Plan Card (Card 2)
-  const x2 = useMotionValue(0);
-  const y2 = useMotionValue(0);
-  const rotateX2 = useTransform(y2, [-300, 300], [8, -8]);
-  const rotateY2 = useTransform(x2, [-300, 300], [-8, 8]);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
 
   const fetchSubscription = async () => {
     try {
@@ -48,17 +37,17 @@ export const UserDashboard: React.FC = () => {
     fetchSubscription();
   }, []);
 
-  const handleCancel = async () => {
-    if (!window.confirm('Are you sure you want to cancel your subscription? You will lose access to premium features.')) {
+  const handleCancel = async (subscriptionId: string, planName: string) => {
+    if (!window.confirm(`Are you sure you want to cancel your "${planName}" subscription?`)) {
       return;
     }
 
-    setCancelling(true);
+    setCancellingId(subscriptionId);
     try {
-      await subscriptionService.cancelSubscription();
+      await subscriptionService.cancelSubscription(subscriptionId);
       toast({
         title: 'Subscription Cancelled',
-        description: 'Your subscription status is now cancelled.',
+        description: `Your "${planName}" subscription has been cancelled.`,
         variant: 'success',
       });
       await fetchSubscription();
@@ -69,30 +58,8 @@ export const UserDashboard: React.FC = () => {
         variant: 'destructive',
       });
     } finally {
-      setCancelling(false);
+      setCancellingId(null);
     }
-  };
-
-  const handleMouseMove1 = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    x1.set(e.clientX - rect.left - rect.width / 2);
-    y1.set(e.clientY - rect.top - rect.height / 2);
-  };
-
-  const handleMouseLeave1 = () => {
-    x1.set(0);
-    y1.set(0);
-  };
-
-  const handleMouseMove2 = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    x2.set(e.clientX - rect.left - rect.width / 2);
-    y2.set(e.clientY - rect.top - rect.height / 2);
-  };
-
-  const handleMouseLeave2 = () => {
-    x2.set(0);
-    y2.set(0);
   };
 
   if (loading) {
@@ -108,7 +75,7 @@ export const UserDashboard: React.FC = () => {
     );
   }
 
-  const active = data?.active;
+  const activeSubscriptions = data?.active || [];
   const history = data?.history || [];
 
   return (
@@ -131,198 +98,172 @@ export const UserDashboard: React.FC = () => {
           </motion.h1>
           <p className="text-muted-foreground mt-1 text-sm">Manage your subscriptions and billing details.</p>
         </div>
-        <div className="text-xs text-muted-foreground flex items-center gap-2">
-          Account Status: 
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-muted-foreground bg-white/5 border border-white/10 rounded-full px-3 py-1 inline-flex items-center gap-1.5">
+            <Sparkles className="h-3 w-3 text-purple-400" />
+            <span className="font-bold text-white">{activeSubscriptions.length}</span> Active {activeSubscriptions.length === 1 ? 'Plan' : 'Plans'}
+          </span>
           <Badge variant="success" className="px-2.5 py-0.5 bg-emerald-500/10 border-emerald-500/20 text-emerald-400 font-bold">
             Active
           </Badge>
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-3">
-        {/* Profile Card with interactive 3D cursor-tilting */}
-        <motion.div
-          style={{ rotateX: rotateX1, rotateY: rotateY1, transformStyle: 'preserve-3d' }}
-          onMouseMove={handleMouseMove1}
-          onMouseLeave={handleMouseLeave1}
-          whileHover={{ scale: 1.015 }}
-          transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-          className="glass-card bento-card p-6 rounded-2xl border border-white/5 flex flex-col justify-between relative overflow-hidden cursor-default select-none"
-        >
-          {/* Subtle background glow */}
-          <div className="absolute -top-10 -left-10 w-24 h-24 rounded-full bg-purple-500/5 blur-2xl pointer-events-none" />
-          
-          <div className="space-y-2 relative z-10" style={{ transform: 'translateZ(20px)' }}>
-            <h2 className="text-sm font-extrabold tracking-wider text-zinc-400 uppercase flex items-center gap-2">
-              <UserIcon className="h-4 w-4 text-purple-400" /> Profile Details
-            </h2>
-            <div className="divide-y divide-white/5 text-sm mt-3">
-              <div className="py-2.5 flex justify-between">
-                <span className="text-zinc-500">Name</span>
-                <span className="font-semibold text-white">{user?.name}</span>
-              </div>
-              <div className="py-2.5 flex justify-between">
-                <span className="text-zinc-500">Email</span>
-                <span className="font-semibold text-white truncate max-w-[150px]">{user?.email}</span>
-              </div>
-              <div className="py-2.5 flex justify-between">
-                <span className="text-zinc-500">Access Level</span>
-                <span className="font-semibold text-purple-400 uppercase tracking-wide flex items-center gap-1">
-                  <Shield className="h-3.5 w-3.5" /> {user?.role}
-                </span>
-              </div>
+      {/* Profile Card */}
+      <div className="glass-card bento-card p-6 rounded-2xl border border-white/5 relative overflow-hidden">
+        <div className="absolute -top-10 -left-10 w-24 h-24 rounded-full bg-purple-500/5 blur-2xl pointer-events-none" />
+        <div className="space-y-2 relative z-10">
+          <h2 className="text-sm font-extrabold tracking-wider text-zinc-400 uppercase flex items-center gap-2">
+            <UserIcon className="h-4 w-4 text-purple-400" /> Profile Details
+          </h2>
+          <div className="grid gap-4 sm:grid-cols-3 text-sm mt-3">
+            <div className="py-2.5 flex justify-between sm:flex-col sm:gap-1">
+              <span className="text-zinc-500">Name</span>
+              <span className="font-semibold text-white">{user?.name}</span>
+            </div>
+            <div className="py-2.5 flex justify-between sm:flex-col sm:gap-1">
+              <span className="text-zinc-500">Email</span>
+              <span className="font-semibold text-white truncate">{user?.email}</span>
+            </div>
+            <div className="py-2.5 flex justify-between sm:flex-col sm:gap-1">
+              <span className="text-zinc-500">Access Level</span>
+              <span className="font-semibold text-purple-400 uppercase tracking-wide flex items-center gap-1">
+                <Shield className="h-3.5 w-3.5" /> {user?.role}
+              </span>
             </div>
           </div>
-          
-          <div className="flex justify-between items-end border-t border-white/5 pt-4 mt-6 relative z-10" style={{ transform: 'translateZ(10px)' }}>
-            <div className="text-[10px] text-zinc-500">
-              Signed up {user ? new Date(user.createdAt).toLocaleDateString() : ''}
+        </div>
+      </div>
+
+      {/* Active Subscriptions Grid */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-black tracking-tight text-white flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-indigo-400" /> Active Subscriptions
+          </h2>
+          <Link to="/">
+            <Button variant="outline" size="sm" className="gap-2 text-xs border-white/10 hover:bg-white/5">
+              <Plus className="h-3.5 w-3.5" /> Add Plan
+            </Button>
+          </Link>
+        </div>
+
+        {activeSubscriptions.length === 0 ? (
+          <div className="glass-card border border-dashed border-white/10 rounded-2xl p-10 text-center space-y-4">
+            <div className="rounded-full bg-white/5 border border-white/10 p-3 inline-flex">
+              <AlertTriangle className="h-5 w-5 text-zinc-400 animate-pulse" />
             </div>
-            
-            {/* Interactive 3D Cube */}
-            <div className="cube-container absolute bottom-4 right-4 opacity-75 pointer-events-none">
-              <div className="cube">
-                <div className="cube-face cube-face-front text-[8px]">SUB</div>
-                <div className="cube-face cube-face-back text-[8px]">FLOW</div>
-                <div className="cube-face cube-face-right text-[8px]">PRO</div>
-                <div className="cube-face cube-face-left text-[8px]">60FPS</div>
-                <div className="cube-face cube-face-top text-[8px]">S</div>
-                <div className="cube-face cube-face-bottom text-[8px]">$</div>
-              </div>
+            <div className="space-y-1">
+              <h3 className="text-md font-bold tracking-tight text-white">No Active Subscriptions</h3>
+              <p className="text-xs text-zinc-400 max-w-sm mx-auto leading-relaxed">
+                You are not currently subscribed to any billing plans. Browse available plans to get started.
+              </p>
             </div>
+            <Link to="/">
+              <Button size="sm" className="text-xs bg-white text-black hover:bg-zinc-200">Browse Plans</Button>
+            </Link>
           </div>
-        </motion.div>
-
-        {/* Current Plan Details with interactive 3D cursor-tilting */}
-        <motion.div
-          style={{ rotateX: rotateX2, rotateY: rotateY2, transformStyle: 'preserve-3d' }}
-          onMouseMove={handleMouseMove2}
-          onMouseLeave={handleMouseLeave2}
-          whileHover={{ scale: 1.015 }}
-          transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-          className="md:col-span-2 glass-card bento-card p-6 rounded-2xl border border-white/5 flex flex-col justify-between relative overflow-hidden cursor-default select-none"
-        >
-          {/* Subtle background glow */}
-          <div className="absolute -top-12 -right-12 w-32 h-32 rounded-full bg-indigo-500/5 blur-2xl pointer-events-none" />
-
-          {active ? (
-            <>
-              <div className="space-y-4" style={{ transform: 'translateZ(25px)' }}>
-                <div className="flex justify-between items-start">
-                  <div className="space-y-1">
-                    <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-1.5">
-                      <Sparkles className="h-3.5 w-3.5 text-indigo-400" /> Current Subscription
-                    </span>
-                    <h3 className="text-2xl font-black text-white">{active.plan.name}</h3>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {activeSubscriptions.map((sub: Subscription, index: number) => (
+              <motion.div
+                key={sub._id}
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.08 }}
+                whileHover={{ scale: 1.015, y: -4 }}
+                className="glass-card bento-card p-6 rounded-2xl border border-white/5 flex flex-col justify-between relative overflow-hidden"
+              >
+                <div className="absolute -top-8 -right-8 w-20 h-20 rounded-full bg-indigo-500/5 blur-2xl pointer-events-none" />
+                
+                <div className="space-y-3 relative z-10">
+                  <div className="flex justify-between items-start">
+                    <div className="space-y-0.5">
+                      <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Subscription</span>
+                      <h3 className="text-xl font-black text-white">{sub.plan?.name || 'Unknown Plan'}</h3>
+                    </div>
+                    <Badge variant="success" className="bg-emerald-500/10 border-emerald-500/20 text-emerald-400 text-[10px]">
+                      {sub.status}
+                    </Badge>
                   </div>
-                  <Badge variant={active.status === 'ACTIVE' ? 'success' : 'warning'} className="bg-purple-500/10 border-purple-500/20 text-purple-400">
-                    {active.status}
-                  </Badge>
-                </div>
 
-                <div className="grid gap-4 sm:grid-cols-2 text-sm bg-white/[0.02] border border-white/5 rounded-xl p-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-white/5 border border-white/10 rounded-lg">
-                      <CreditCard className="h-4 w-4 text-zinc-400" />
+                  <div className="grid grid-cols-2 gap-3 text-sm bg-white/[0.02] border border-white/5 rounded-xl p-3">
+                    <div className="flex items-center space-x-2">
+                      <CreditCard className="h-3.5 w-3.5 text-zinc-500" />
+                      <div>
+                        <p className="text-[9px] text-zinc-500 font-semibold uppercase">Price</p>
+                        <p className="font-bold text-white text-xs">
+                          ${sub.plan ? (sub.plan.price / 100).toFixed(2) : '0.00'}
+                          <span className="text-zinc-500 font-normal">/{sub.plan?.billingCycle === 'ANNUAL' ? 'yr' : 'mo'}</span>
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-[10px] text-zinc-500 font-semibold uppercase tracking-wider">Pricing Tier</p>
-                      <p className="font-bold text-white">
-                        ${(active.plan.price / 100).toFixed(2)} /{' '}
-                        {active.plan.billingCycle === 'ANNUAL' ? 'year' : 'month'}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-white/5 border border-white/10 rounded-lg">
-                      <Calendar className="h-4 w-4 text-zinc-400" />
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-zinc-500 font-semibold uppercase tracking-wider">Renewal Date</p>
-                      <p className="font-bold text-white">
-                        {new Date(active.endDate).toLocaleDateString()}
-                      </p>
+                    <div className="flex items-center space-x-2">
+                      <Calendar className="h-3.5 w-3.5 text-zinc-500" />
+                      <div>
+                        <p className="text-[9px] text-zinc-500 font-semibold uppercase">Renews</p>
+                        <p className="font-bold text-white text-xs">{new Date(sub.endDate).toLocaleDateString()}</p>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="flex justify-between items-center border-t border-white/5 pt-4 mt-6" style={{ transform: 'translateZ(15px)' }}>
-                <Link to="/">
-                  <Button variant="outline" size="sm" className="gap-2 text-xs border-white/10 hover:bg-white/5">
-                    Change Plan <ArrowRight className="h-3.5 w-3.5" />
-                  </Button>
-                </Link>
-                {active.status === 'ACTIVE' && (
+                <div className="border-t border-white/5 pt-3 mt-4 relative z-10">
                   <Button
                     variant="destructive"
                     size="sm"
-                    loading={cancelling}
-                    onClick={handleCancel}
-                    className="text-xs"
+                    className="w-full text-xs"
+                    loading={cancellingId === sub._id}
+                    onClick={() => handleCancel(sub._id, sub.plan?.name || 'this plan')}
                   >
-                    Cancel Subscription
+                    Cancel
                   </Button>
-                )}
-              </div>
-            </>
-          ) : (
-            <div className="h-full flex flex-col justify-center items-center py-6 text-center space-y-4" style={{ transform: 'translateZ(20px)' }}>
-              <div className="rounded-full bg-white/5 border border-white/10 p-3">
-                <AlertTriangle className="h-5 w-5 text-zinc-400 animate-pulse" />
-              </div>
-              <div className="space-y-1">
-                <h3 className="text-md font-bold tracking-tight text-white">No Active Subscription</h3>
-                <p className="text-xs text-zinc-400 max-w-sm leading-relaxed">
-                  You are not currently subscribed to any billing plan. Choose a plan to unlock
-                  premium platform features.
-                </p>
-              </div>
-              <Link to="/" className="pt-2">
-                <Button size="sm" className="text-xs bg-white text-black hover:bg-zinc-200">Browse Available Plans</Button>
-              </Link>
-            </div>
-          )}
-        </motion.div>
+                </div>
+              </motion.div>
+            ))}
+
+            {/* Add More Plan Card */}
+            <Link to="/">
+              <motion.div
+                whileHover={{ scale: 1.015, y: -4 }}
+                className="glass-card border border-dashed border-white/10 rounded-2xl p-6 flex flex-col items-center justify-center min-h-[220px] cursor-pointer hover:border-purple-500/30 transition-colors"
+              >
+                <div className="rounded-full bg-white/5 border border-white/10 p-3 mb-3">
+                  <Plus className="h-5 w-5 text-zinc-400" />
+                </div>
+                <p className="text-sm font-semibold text-zinc-400">Add Another Plan</p>
+                <p className="text-[10px] text-zinc-500 mt-1">Subscribe to more services</p>
+              </motion.div>
+            </Link>
+          </div>
+        )}
       </div>
 
-      {/* Premium Telemetry & Feature Metrics */}
-      {active && (
+      {/* Telemetry Widgets */}
+      {activeSubscriptions.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25 }}
           className="grid gap-6 md:grid-cols-3"
         >
-          {/* Card 1: API Credits Usage */}
           <div className="glass-card p-6 rounded-2xl border border-white/5 space-y-4 relative overflow-hidden">
             <div className="flex justify-between items-center">
-              <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">API Usage</span>
+              <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Active Plans</span>
               <Badge variant="outline" className="text-[9px] border-purple-500/20 text-purple-400 bg-purple-500/5 font-semibold">
-                86.2% Used
+                {activeSubscriptions.length} Active
               </Badge>
             </div>
             <div className="space-y-2">
-              <div className="flex justify-between items-end">
-                <span className="text-2xl font-black text-white">43,122</span>
-                <span className="text-xs text-zinc-500">/ 50,000 credits</span>
-              </div>
-              {/* Progress bar */}
-              <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: '86.2%' }}
-                  transition={{ duration: 1, delay: 0.5 }}
-                  className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full"
-                />
-              </div>
+              {activeSubscriptions.map((sub) => (
+                <div key={sub._id} className="flex items-center justify-between text-xs bg-white/[0.02] border border-white/5 rounded-lg px-3 py-2">
+                  <span className="font-semibold text-white">{sub.plan?.name}</span>
+                  <span className="text-zinc-500">${sub.plan ? (sub.plan.price / 100).toFixed(2) : '0'}/mo</span>
+                </div>
+              ))}
             </div>
-            <p className="text-[10px] text-zinc-500 leading-relaxed">
-              Credits reset automatically on renewal date ({new Date(active.endDate).toLocaleDateString()}).
-            </p>
           </div>
 
-          {/* Card 2: Security & API Keys */}
           <div className="glass-card p-6 rounded-2xl border border-white/5 space-y-4">
             <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Access Credentials</span>
             <div className="space-y-2.5">
@@ -342,7 +283,6 @@ export const UserDashboard: React.FC = () => {
             </div>
           </div>
 
-          {/* Card 3: Included Features */}
           <div className="glass-card p-6 rounded-2xl border border-white/5 space-y-3">
             <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Included Privileges</span>
             <div className="space-y-2 text-xs">

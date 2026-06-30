@@ -3,7 +3,7 @@ const { sendResponse } = require('../utils/responseHandler');
 const AppError = require('../utils/appError');
 
 /**
- * Get active subscription and subscription history for the logged-in user
+ * Get all active subscriptions and history for the logged-in user
  */
 const getMySubscription = async (req, res, next) => {
   try {
@@ -15,7 +15,7 @@ const getMySubscription = async (req, res, next) => {
 };
 
 /**
- * Subscribe user to a plan
+ * Subscribe user to a plan (allows multiple subscriptions on different plans)
  */
 const subscribeToPlan = async (req, res, next) => {
   try {
@@ -32,16 +32,24 @@ const subscribeToPlan = async (req, res, next) => {
 };
 
 /**
- * Upgrade or Downgrade current subscription
+ * Change a specific active subscription to a different plan
  */
 const changePlan = async (req, res, next) => {
   try {
-    const { planId, months } = req.body;
+    const { planId, subscriptionId, months } = req.body;
     if (!planId) {
       return next(new AppError('Please provide a planId', 400));
     }
+    if (!subscriptionId) {
+      return next(new AppError('Please provide a subscriptionId to change', 400));
+    }
 
-    const result = await subscriptionService.changeSubscriptionPlan(req.user._id, planId, months ? Number(months) : undefined);
+    const result = await subscriptionService.changeSubscriptionPlan(
+      req.user._id,
+      subscriptionId,
+      planId,
+      months ? Number(months) : undefined
+    );
     const message = result.type === 'upgrade' 
       ? 'Subscription upgraded successfully' 
       : 'Subscription downgraded successfully';
@@ -53,11 +61,12 @@ const changePlan = async (req, res, next) => {
 };
 
 /**
- * Cancel the active subscription
+ * Cancel an active subscription (optionally by subscriptionId)
  */
 const cancelSubscription = async (req, res, next) => {
   try {
-    const cancelledSub = await subscriptionService.cancelSubscription(req.user._id);
+    const { subscriptionId } = req.body;
+    const cancelledSub = await subscriptionService.cancelSubscription(req.user._id, subscriptionId);
     return sendResponse(res, 200, cancelledSub, 'Subscription cancelled successfully');
   } catch (error) {
     next(error);

@@ -24,6 +24,11 @@ const pricingLogSchema = new mongoose.Schema(
       ref: 'User',
       required: [true, 'User who changed price is required']
     },
+    actorRole: {
+      type: String,
+      enum: ['ADMIN', 'SUPER_ADMIN'],
+      required: [true, 'Actor role is required']
+    },
     changedAt: {
       type: Date,
       default: Date.now

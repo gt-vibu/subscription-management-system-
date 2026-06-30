@@ -60,7 +60,7 @@ const createPlan = async (req, res, next) => {
 const updatePlan = async (req, res, next) => {
   try {
     // Pass actor ID (req.user._id) to log pricing changes
-    const updatedPlan = await planService.updatePlan(req.params.id, req.body, req.user._id);
+    const updatedPlan = await planService.updatePlan(req.params.id, req.body, req.user._id, req.user.role);
     return sendResponse(res, 200, updatedPlan, 'Plan updated successfully');
   } catch (error) {
     next(error);

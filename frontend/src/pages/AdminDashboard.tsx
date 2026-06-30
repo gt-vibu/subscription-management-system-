@@ -9,7 +9,7 @@ import { Badge } from '../components/ui/Badge';
 import { Input } from '../components/ui/Input';
 import { Dialog } from '../components/ui/Dialog';
 import { CardSkeleton, TableSkeleton } from '../components/ui/Skeletons';
-import { Plus, Edit2, Trash2, RotateCcw, Users, DollarSign, Activity, TrendingUp, Calendar, CreditCard, Sparkles } from 'lucide-react';
+import { Plus, Edit2, Trash2, RotateCcw, Users, DollarSign, Activity, TrendingUp } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 

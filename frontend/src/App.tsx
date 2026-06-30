@@ -8,7 +8,6 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Catalog from './pages/Catalog';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import VerifyEmail from './pages/VerifyEmail';
 import Dashboard from './pages/Dashboard';
 import Unauthorized from './pages/Unauthorized';
 import NotFound from './pages/NotFound';
@@ -26,7 +25,6 @@ function App() {
               {/* Authentication routes */}
               <Route path="login" element={<Login />} />
               <Route path="register" element={<Register />} />
-              <Route path="verify-email" element={<VerifyEmail />} />
 
               {/* Role-protected dashboard routes */}
               <Route
