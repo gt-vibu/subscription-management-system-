@@ -44,16 +44,12 @@ if (shouldCluster && cluster.isMaster) {
   const morgan = require('morgan');
 
   const connectDB = require('./config/db');
-  const bootstrapSuperAdmin = require('./services/bootstrapSuperAdmin');
   const errorHandler = require('./middlewares/errorMiddleware');
   const AppError = require('./utils/appError');
   const { apiLimiter } = require('./middlewares/rateLimitMiddleware');
 
   // Initialize database connection
   connectDB().then(async () => {
-    // Bootstrap Super Admin role
-    await bootstrapSuperAdmin();
-
     // Initialize express application
     const app = express();
 
