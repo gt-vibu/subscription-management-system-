@@ -3,6 +3,11 @@ const AppError = require('../utils/appError');
 const subscriptionService = require('./subscriptionService');
 
 /**
+ * Escape special regex characters in user input to prevent ReDoS / NoSQL injection.
+ */
+const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/**
  * Get paginated and searchable list of users (Super Admin only)
  */
 const getUsers = async (searchQuery = '', page = 1, limit = 10, role = '', sortBy = '', sortOrder = 'asc') => {
@@ -10,18 +15,24 @@ const getUsers = async (searchQuery = '', page = 1, limit = 10, role = '', sortB
 
   const filter = {};
   if (searchQuery) {
+    const sanitized = escapeRegex(searchQuery);
     filter.$or = [
-      { name: { $regex: searchQuery, $options: 'i' } },
-      { email: { $regex: searchQuery, $options: 'i' } }
+      { name: { $regex: sanitized, $options: 'i' } },
+      { email: { $regex: sanitized, $options: 'i' } }
     ];
   }
 
   if (role && role !== 'ALL') {
-    filter.role = { $regex: new RegExp(`^${role}$`, 'i') };
+    const allowedRoles = ['USER', 'ADMIN', 'SUPER_ADMIN'];
+    const upperRole = role.toUpperCase();
+    if (allowedRoles.includes(upperRole)) {
+      filter.role = upperRole;
+    }
   }
 
   let sortOptions = { role: 1, name: 1 };
-  if (sortBy) {
+  const allowedSortFields = ['name', 'email', 'role', 'createdAt', 'isActive'];
+  if (sortBy && allowedSortFields.includes(sortBy)) {
     sortOptions = { [sortBy]: sortOrder === 'desc' ? -1 : 1 };
   }
 

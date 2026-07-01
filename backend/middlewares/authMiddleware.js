@@ -7,9 +7,6 @@ const AppError = require('../utils/appError');
  */
 const protect = async (req, res, next) => {
   try {
-    console.log("Cookies:", req.cookies);
-    console.log("Headers Cookie:", req.headers.cookie);
-
     let token = req.cookies.token;
     if (!token && req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
       token = req.headers.authorization.split(' ')[1];
@@ -47,9 +44,6 @@ const protect = async (req, res, next) => {
  */
 const optionalProtect = async (req, res, next) => {
   try {
-    console.log("Cookies:", req.cookies);
-    console.log("Headers Cookie:", req.headers.cookie);
-
     let token = req.cookies.token;
     if (!token && req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
       token = req.headers.authorization.split(' ')[1];

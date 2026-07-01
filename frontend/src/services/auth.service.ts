@@ -4,28 +4,18 @@ import type { User } from '../types';
 export const authService = {
   async register(name: string, email: string, password: string): Promise<User> {
     const response = await client.post('/auth/register', { name, email, password });
-    const { user, token } = response.data.data;
-    if (token) {
-      localStorage.setItem('token', token);
-    }
+    const { user } = response.data.data;
     return user;
   },
 
   async login(email: string, password: string): Promise<User> {
     const response = await client.post('/auth/login', { email, password });
-    const { user, token } = response.data.data;
-    if (token) {
-      localStorage.setItem('token', token);
-    }
+    const { user } = response.data.data;
     return user;
   },
 
   async logout(): Promise<void> {
-    try {
-      await client.post('/auth/logout');
-    } finally {
-      localStorage.removeItem('token');
-    }
+    await client.post('/auth/logout');
   },
 
   async getProfile(): Promise<User> {

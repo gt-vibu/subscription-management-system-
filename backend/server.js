@@ -84,8 +84,9 @@ if (shouldCluster && cluster.isMaster) {
             return callback(null, true);
           }
           
-          // Allow any Vercel deployments (including branch previews)
-          if (origin.endsWith('.vercel.app') || origin.includes('vercel.app')) {
+          // Allow Vercel preview deployments matching the project name
+          const vercelProject = process.env.VERCEL_PROJECT_NAME || 'subscription-management';
+          if (origin.endsWith('.vercel.app') && origin.includes(vercelProject)) {
             return callback(null, true);
           }
           
