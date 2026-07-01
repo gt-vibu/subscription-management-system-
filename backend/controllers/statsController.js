@@ -1,44 +1,33 @@
 const statsService = require('../services/statsService');
 const { sendResponse } = require('../utils/responseHandler');
+const catchAsync = require('../utils/catchAsync');
 
 /**
  * Get platform metrics (MRR, user counts, role splits, plan subscribers)
  * Accessible by: ADMIN, SUPER_ADMIN
  */
-const getPlatformStats = async (req, res, next) => {
-  try {
-    const stats = await statsService.getPlatformStats();
-    return sendResponse(res, 200, stats);
-  } catch (error) {
-    next(error);
-  }
-};
+const getPlatformStats = catchAsync(async (req, res) => {
+  const stats = await statsService.getPlatformStats();
+  return sendResponse(res, 200, stats);
+});
 
 /**
  * Get audit logs for plan price changes
  * Accessible by: SUPER_ADMIN
  */
-const getPricingLogs = async (req, res, next) => {
-  try {
-    const logs = await statsService.getPricingLogs();
-    return sendResponse(res, 200, logs);
-  } catch (error) {
-    next(error);
-  }
-};
+const getPricingLogs = catchAsync(async (req, res) => {
+  const logs = await statsService.getPricingLogs();
+  return sendResponse(res, 200, logs);
+});
 
 /**
  * Get public platform metrics (MRR, user count, active subscriptions, recent users list)
  * Accessible by: PUBLIC
  */
-const getPublicStats = async (req, res, next) => {
-  try {
-    const publicStats = await statsService.getPublicPlatformStats();
-    return sendResponse(res, 200, publicStats);
-  } catch (error) {
-    next(error);
-  }
-};
+const getPublicStats = catchAsync(async (req, res) => {
+  const publicStats = await statsService.getPublicPlatformStats();
+  return sendResponse(res, 200, publicStats);
+});
 
 module.exports = {
   getPlatformStats,

@@ -2,12 +2,12 @@ const User = require('../models/User');
 const Plan = require('../models/Plan');
 const Subscription = require('../models/Subscription');
 const PricingLog = require('../models/PricingLog');
+const { calculateMrrContribution } = require('../utils/subscriptionHelpers');
 
 /**
  * Get unified statistics for admin and super admin dashboards
  */
 const getPlatformStats = async () => {
-  // Run queries in parallel to minimize response latency
   const [
     totalUsers,
     roleCounts,
@@ -24,7 +24,6 @@ const getPlatformStats = async () => {
     Plan.find({})
   ]);
 
-  // Format role counts into a clean key-value object
   const roles = { USER: 0, ADMIN: 0, SUPER_ADMIN: 0 };
   roleCounts.forEach((group) => {
     if (roles[group._id] !== undefined) {
@@ -32,11 +31,9 @@ const getPlatformStats = async () => {
     }
   });
 
-  // Calculate MRR (Monthly Recurring Revenue) in cents
   let mrrInCents = 0;
-  const planSubscribers = {}; // Map of planId -> count
+  const planSubscribers = {};
 
-  // Initialize subscribers counts for all plans
   plans.forEach((p) => {
     planSubscribers[p._id.toString()] = {
       id: p._id,
@@ -52,13 +49,9 @@ const getPlatformStats = async () => {
   activeSubscriptions.forEach((sub) => {
     if (!sub.plan) return;
     const planIdStr = sub.plan._id.toString();
-
-    // Sum up MRR contribution
-    const planPrice = sub.plan.price;
-    const contribution = sub.plan.billingCycle === 'ANNUAL' ? Math.round(planPrice / 12) : planPrice;
+    const contribution = calculateMrrContribution(sub.plan.price, sub.plan.billingCycle);
     mrrInCents += contribution;
 
-    // Track plan subscribers count
     if (planSubscribers[planIdStr]) {
       planSubscribers[planIdStr].activeSubscribers += 1;
       planSubscribers[planIdStr].monthlyRevenue += contribution;
@@ -73,7 +66,7 @@ const getPlatformStats = async () => {
     subscriptions: {
       active: activeSubscriptions.length,
       total: allSubscriptionsCount,
-      mrr: mrrInCents // in cents
+      mrr: mrrInCents
     },
     plans: Object.values(planSubscribers)
   };
@@ -108,16 +101,12 @@ const getPublicPlatformStats = async () => {
       .limit(3)
   ]);
 
-  // Calculate MRR
   let mrrInCents = 0;
   activeSubscriptionsList.forEach((sub) => {
     if (!sub.plan) return;
-    const planPrice = sub.plan.price;
-    const contribution = sub.plan.billingCycle === 'ANNUAL' ? Math.round(planPrice / 12) : planPrice;
-    mrrInCents += contribution;
+    mrrInCents += calculateMrrContribution(sub.plan.price, sub.plan.billingCycle);
   });
 
-  // Format recent subscribers securely
   const recent = recentSubscriptions.map((sub) => {
     const u = sub.user;
     const obfuscateEmail = (email) => {

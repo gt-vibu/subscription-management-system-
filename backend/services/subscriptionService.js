@@ -1,20 +1,7 @@
 const Subscription = require('../models/Subscription');
 const Plan = require('../models/Plan');
 const AppError = require('../utils/appError');
-
-/**
- * Calculate the end date based on billing cycle and optional duration (months)
- */
-const calculateEndDate = (billingCycle, startDate = new Date(), months = 1) => {
-  const date = new Date(startDate);
-  if (billingCycle === 'ANNUAL') {
-    date.setFullYear(date.getFullYear() + 1);
-  } else {
-    // Add 30 days * number of months
-    date.setDate(date.getDate() + (30 * months));
-  }
-  return date;
-};
+const { calculateSubscriptionPricing, calculateEndDate } = require('../utils/subscriptionHelpers');
 
 /**
  * Get all active subscriptions for a specific user (supports multi-subscription)
@@ -53,10 +40,8 @@ const getUserSubscriptionDetails = async (userId) => {
  * Subscribe a user to a plan (allows multiple active subscriptions on different plans)
  */
 const subscribe = async (userId, planId, billingCycle = 'MONTHLY', months = 1) => {
-  // Normalize billingCycle
   const cycle = (billingCycle || 'MONTHLY').toUpperCase();
 
-  // Check if user already has an active subscription on the SAME plan
   const existingOnSamePlan = await Subscription.findOne({
     user: userId,
     plan: planId,
@@ -66,7 +51,6 @@ const subscribe = async (userId, planId, billingCycle = 'MONTHLY', months = 1) =
     throw new AppError('You are already subscribed to this plan. Choose a different plan or cancel first.', 400);
   }
 
-  // Fetch the plan
   const plan = await Plan.findById(planId);
   if (!plan) {
     throw new AppError('Plan not found', 404);
@@ -77,16 +61,7 @@ const subscribe = async (userId, planId, billingCycle = 'MONTHLY', months = 1) =
   }
 
   const startDate = new Date();
-  let endDate;
-  let pricePaid;
-
-  if (cycle === 'ANNUAL') {
-    pricePaid = Math.round(plan.price * 12 * 0.85); // 15% discount
-    endDate = calculateEndDate('ANNUAL', startDate);
-  } else {
-    pricePaid = plan.price * months;
-    endDate = calculateEndDate('MONTHLY', startDate, months);
-  }
+  const { pricePaid, endDate } = calculateSubscriptionPricing(plan.price, cycle, months);
 
   return await Subscription.create({
     user: userId,
@@ -119,7 +94,6 @@ const changeSubscriptionPlan = async (userId, subscriptionId, newPlanId, billing
     throw new AppError('You are already subscribed to this plan.', 400);
   }
 
-  // Check if user already has an active sub on the target plan
   const existingOnTarget = await Subscription.findOne({
     user: userId,
     plan: newPlanId,
@@ -129,7 +103,6 @@ const changeSubscriptionPlan = async (userId, subscriptionId, newPlanId, billing
     throw new AppError('You already have an active subscription on the target plan.', 400);
   }
 
-  // Fetch the new plan
   const newPlan = await Plan.findById(newPlanId);
   if (!newPlan) {
     throw new AppError('Target plan not found', 404);
@@ -139,25 +112,14 @@ const changeSubscriptionPlan = async (userId, subscriptionId, newPlanId, billing
     throw new AppError('Target plan is archived and cannot be subscribed to.', 400);
   }
 
-  // Determine whether it is an upgrade or downgrade (based on price)
   const isUpgrade = newPlan.price > activeSub.plan.price;
   const actionType = isUpgrade ? 'upgrade' : 'downgrade';
 
-  // Mark previous active subscription as EXPIRED and start a fresh cycle
   activeSub.status = 'EXPIRED';
   await activeSub.save();
 
   const startDate = new Date();
-  let endDate;
-  let pricePaid;
-
-  if (cycle === 'ANNUAL') {
-    pricePaid = Math.round(newPlan.price * 12 * 0.85); // 15% discount
-    endDate = calculateEndDate('ANNUAL', startDate);
-  } else {
-    pricePaid = newPlan.price * months;
-    endDate = calculateEndDate('MONTHLY', startDate, months);
-  }
+  const { pricePaid, endDate } = calculateSubscriptionPricing(newPlan.price, cycle, months);
 
   const newSub = await Subscription.create({
     user: userId,
@@ -181,7 +143,6 @@ const changeSubscriptionPlan = async (userId, subscriptionId, newPlanId, billing
 const cancelSubscription = async (userId, subscriptionId) => {
   const query = { user: userId, status: 'ACTIVE' };
 
-  // If subscriptionId is provided, cancel that specific one
   if (subscriptionId) {
     query._id = subscriptionId;
   }

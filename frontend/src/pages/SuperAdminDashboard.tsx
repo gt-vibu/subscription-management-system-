@@ -15,6 +15,7 @@ import { Shield, Users, DollarSign, Database, Search, ArrowLeft, ArrowRight, Tra
 import { motion } from 'framer-motion';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Cell } from 'recharts';
 import SystemCore3D from '../components/ui/SystemCore3D';
+import { getPasswordChecks, isPasswordStrong, generateStrongPassword } from '../utils/password';
 
 export const SuperAdminDashboard: React.FC = () => {
   const { user: currentUser } = useAuth();
@@ -242,22 +243,7 @@ export const SuperAdminDashboard: React.FC = () => {
   };
 
   const handleSuggestPassword = () => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@$!%*?&';
-    let suggested = '';
-    
-    // Ensure at least one of each required character category is present
-    suggested += 'A'; // Uppercase
-    suggested += 'a'; // Lowercase
-    suggested += '9'; // Digit
-    suggested += '@'; // Special
-    
-    for (let i = 4; i < 14; i++) {
-      suggested += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    
-    // Shuffle the generated password
-    suggested = suggested.split('').sort(() => 0.5 - Math.random()).join('');
-    
+    const suggested = generateStrongPassword(14);
     setCreatePassword(suggested);
     navigator.clipboard.writeText(suggested);
     toast({
@@ -267,15 +253,9 @@ export const SuperAdminDashboard: React.FC = () => {
     });
   };
 
-  const passwordChecks = {
-    length: createPassword.length >= 8,
-    uppercase: /[A-Z]/.test(createPassword),
-    lowercase: /[a-z]/.test(createPassword),
-    digit: /\d/.test(createPassword),
-    special: /[@$!%*?&]/.test(createPassword),
-  };
+  const passwordChecks = getPasswordChecks(createPassword);
 
-  const isCreatePasswordStrong = Object.values(passwordChecks).every(Boolean);
+  const isCreatePasswordStrong = isPasswordStrong(createPassword);
 
   const handleCreateUserSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
