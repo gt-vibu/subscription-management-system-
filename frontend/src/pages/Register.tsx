@@ -133,11 +133,11 @@ export const Register: React.FC = () => {
         {/* Header */}
         <div className="flex flex-col space-y-2 text-center">
           <Link to="/" className="flex items-center justify-center space-x-2 shrink-0 mb-2">
-            <span className="h-6 w-6 rounded-md bg-slate-900 text-white flex items-center justify-center font-extrabold text-xs">
+            <span className="h-6 w-6 rounded-md bg-gradient-to-tr from-[#6366F1] to-[#8B5CF6] text-white flex items-center justify-center font-extrabold text-xs shadow-sm">
               S
             </span>
-            <span className="font-extrabold tracking-tight text-sm text-slate-900 uppercase">
-              Subscripto
+            <span className="font-extrabold tracking-tight text-sm text-slate-900">
+              SubManage
             </span>
           </Link>
           <h1 className="text-xl font-extrabold tracking-tight text-slate-900">
@@ -279,7 +279,7 @@ export const Register: React.FC = () => {
 
           <Button 
             type="submit" 
-            className="w-full h-11 bg-slate-900 hover:bg-slate-800 text-white border-0 font-bold rounded-xl shadow-lg mt-4" 
+            className="w-full h-11 bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] hover:opacity-90 text-white border-0 font-bold rounded-xl shadow-md mt-4" 
             loading={loading} 
             disabled={passwordValue !== '' && !isPasswordStrong}
           >

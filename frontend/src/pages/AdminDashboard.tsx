@@ -295,7 +295,7 @@ export const AdminDashboard: React.FC = () => {
 
       {/* Plan management grid */}
       <div className="space-y-4">
-        <h2 className="text-lg font-black tracking-tight text-white">Subscription Plans & Management</h2>
+        <h2 className="text-lg font-black tracking-tight text-slate-900">Subscription Plans & Management</h2>
         <motion.div
           className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
           initial="hidden"

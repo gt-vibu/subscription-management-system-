@@ -155,7 +155,7 @@ export const Layout: React.FC = () => {
           {/* Logo Brand and Toggle Button */}
           <div className="flex items-center justify-between px-1">
             <Link to="/" className="flex items-center space-x-2 shrink-0">
-              <span className="h-6 w-6 rounded-md bg-slate-900 text-white dark:bg-white dark:text-black flex items-center justify-center font-extrabold text-xs">
+              <span className="h-6 w-6 rounded-md bg-gradient-to-tr from-[#6366F1] to-[#8B5CF6] text-white flex items-center justify-center font-extrabold text-xs shadow-sm">
                 S
               </span>
               <AnimatePresence initial={false}>
@@ -166,7 +166,7 @@ export const Layout: React.FC = () => {
                     exit={{ opacity: 0, width: 0 }}
                     className="font-extrabold tracking-tight text-md text-foreground whitespace-nowrap overflow-hidden"
                   >
-                    SubFlow
+                    SubManage
                   </motion.span>
                 )}
               </AnimatePresence>
@@ -304,10 +304,10 @@ export const Layout: React.FC = () => {
       {/* Mobile Header navigation */}
       <header className="md:hidden glass-card rounded-2xl p-4 flex items-center justify-between z-30">
         <Link to="/" className="flex items-center space-x-2">
-          <span className="h-5 w-5 rounded bg-slate-900 text-white dark:bg-white dark:text-black flex items-center justify-center font-extrabold text-[10px]">
+          <span className="h-5 w-5 rounded bg-gradient-to-tr from-[#6366F1] to-[#8B5CF6] text-white flex items-center justify-center font-extrabold text-[10px]">
             S
           </span>
-          <span className="font-extrabold tracking-tight text-sm text-foreground">SubFlow</span>
+          <span className="font-extrabold tracking-tight text-sm text-foreground">SubManage</span>
         </Link>
 
         <div className="flex items-center space-x-3">
