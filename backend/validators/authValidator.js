@@ -1,4 +1,5 @@
 const AppError = require('../utils/appError');
+const { isValidEmail, isValidPassword } = require('../utils/validation');
 
 /**
  * Validate registration parameters
@@ -14,9 +15,7 @@ const validateRegister = (req, res, next) => {
     return next(new AppError('Email is required.', 400));
   }
 
-  // Basic email regex
-  const emailRegex = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/;
-  if (!emailRegex.test(email)) {
+  if (!isValidEmail(email)) {
     return next(new AppError('Please provide a valid email address.', 400));
   }
 
@@ -24,9 +23,7 @@ const validateRegister = (req, res, next) => {
     return next(new AppError('Password is required.', 400));
   }
 
-  // Strong password regex: Min 8 chars, 1 upper, 1 lower, 1 digit, 1 special
-  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-  if (!passwordRegex.test(password)) {
+  if (!isValidPassword(password)) {
     return next(new AppError('Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character (@$!%*?&).', 400));
   }
 
@@ -60,8 +57,7 @@ const validateVerifyEmail = (req, res, next) => {
     return next(new AppError('Email is required.', 400));
   }
 
-  const emailRegex = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/;
-  if (!emailRegex.test(email)) {
+  if (!isValidEmail(email)) {
     return next(new AppError('Please provide a valid email address.', 400));
   }
 
@@ -82,8 +78,7 @@ const validateResendOtp = (req, res, next) => {
     return next(new AppError('Email is required.', 400));
   }
 
-  const emailRegex = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/;
-  if (!emailRegex.test(email)) {
+  if (!isValidEmail(email)) {
     return next(new AppError('Please provide a valid email address.', 400));
   }
 
