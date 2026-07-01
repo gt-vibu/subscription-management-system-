@@ -85,11 +85,11 @@ if (shouldCluster && cluster.isMaster) {
           }
           
           // Allow any Vercel deployments (including branch previews)
-          if (/\.vercel\.app$/.test(origin)) {
+          if (origin.endsWith('.vercel.app') || origin.includes('vercel.app')) {
             return callback(null, true);
           }
           
-          return callback(new Error('Not allowed by CORS'));
+          return callback(null, false);
         },
         credentials: true,
         methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
