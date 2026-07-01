@@ -24,10 +24,6 @@ export const SuperAdminDashboard: React.FC = () => {
   const [pricingLogs, setPricingLogs] = useState<PricingLog[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Simulator States
-  const [simulatorSubscribers, setSimulatorSubscribers] = useState(250);
-  const [simulatorPrice, setSimulatorPrice] = useState(39);
-
   // Users management state
   const [users, setUsers] = useState<User[]>([]);
   const [search, setSearch] = useState('');
@@ -385,27 +381,27 @@ export const SuperAdminDashboard: React.FC = () => {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className="space-y-8"
+      className="space-y-8 text-slate-900"
     >
       {/* Title */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">
             Super Admin Console
           </h1>
-          <p className="text-muted-foreground mt-1 text-sm">
+          <p className="text-slate-500 mt-1 text-sm">
             Complete platform credentials, direct billing upgrades, roles management, and pricing audits.
           </p>
         </div>
         {activeTab === 'users' && (
-          <Button onClick={() => setIsCreateUserOpen(true)} className="gap-2 shadow-sm border border-purple-500/20 bg-purple-600 hover:bg-purple-700 text-white font-semibold">
+          <Button onClick={() => setIsCreateUserOpen(true)} className="gap-2 shadow-sm border border-indigo-500/20 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl">
             <UserPlus className="h-4 w-4" /> Create User/Admin
           </Button>
         )}
       </div>
 
       {/* Tabs list (Glassmorphism layout touch) */}
-      <div className="flex border border-white/5 bg-white/[0.02] backdrop-blur-md rounded-xl p-1 max-w-2xl">
+      <div className="flex border border-slate-200 bg-slate-100 rounded-xl p-1 max-w-2xl">
         {([
           { id: 'overview', label: 'Overview' },
           { id: 'plans', label: 'Plans & Pricing' },
@@ -417,8 +413,8 @@ export const SuperAdminDashboard: React.FC = () => {
             onClick={() => setActiveTab(tab.id)}
             className={`flex-1 px-4 py-2 text-xs font-semibold rounded-lg transition-all ${
               activeTab === tab.id
-                ? 'bg-white text-black shadow-sm'
-                : 'text-zinc-500 hover:text-white hover:bg-white/5'
+                ? 'bg-white text-slate-900 shadow-sm border border-slate-200'
+                : 'text-slate-500 hover:text-slate-900 hover:bg-slate-200/50'
             }`}
           >
             {tab.label}
@@ -433,53 +429,53 @@ export const SuperAdminDashboard: React.FC = () => {
           <div className="grid gap-6 md:grid-cols-4">
             <motion.div
               whileHover={{ y: -4 }}
-              className="glass-card bento-card p-6 rounded-2xl flex items-center space-x-4 border border-white/5 relative overflow-hidden"
+              className="glass-card p-6 rounded-2xl flex items-center space-x-4 border border-slate-200 bg-white relative overflow-hidden shadow-sm"
             >
-              <div className="p-3 bg-purple-500/10 rounded-xl text-purple-400">
+              <div className="p-3 bg-purple-50 rounded-xl text-purple-600">
                 <DollarSign className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-xs text-zinc-500 font-bold uppercase tracking-wider">Platform MRR</p>
-                <p className="text-2xl font-black mt-0.5 text-white">${(mrr / 100).toFixed(2)}</p>
+                <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">Platform MRR</p>
+                <p className="text-2xl font-black mt-0.5 text-slate-900">${(mrr / 100).toFixed(2)}</p>
               </div>
             </motion.div>
 
             <motion.div
               whileHover={{ y: -4 }}
-              className="glass-card bento-card p-6 rounded-2xl flex items-center space-x-4 border border-white/5"
+              className="glass-card p-6 rounded-2xl flex items-center space-x-4 border border-slate-200 bg-white shadow-sm"
             >
-              <div className="p-3 bg-indigo-500/10 rounded-xl text-indigo-400">
+              <div className="p-3 bg-indigo-50 rounded-xl text-indigo-600">
                 <Users className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-xs text-zinc-500 font-bold uppercase tracking-wider">Active Subs</p>
-                <p className="text-2xl font-black mt-0.5 text-white">{activeSubs}</p>
+                <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">Active Subs</p>
+                <p className="text-2xl font-black mt-0.5 text-slate-900">{activeSubs}</p>
               </div>
             </motion.div>
 
             <motion.div
               whileHover={{ y: -4 }}
-              className="glass-card bento-card p-6 rounded-2xl flex items-center space-x-4 border border-white/5"
+              className="glass-card p-6 rounded-2xl flex items-center space-x-4 border border-slate-200 bg-white shadow-sm"
             >
-              <div className="p-3 bg-blue-500/10 rounded-xl text-blue-400">
+              <div className="p-3 bg-blue-50 rounded-xl text-blue-600">
                 <Database className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-xs text-zinc-500 font-bold uppercase tracking-wider">Total Signups</p>
-                <p className="text-2xl font-black mt-0.5 text-white">{totalUsers}</p>
+                <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">Total Signups</p>
+                <p className="text-2xl font-black mt-0.5 text-slate-900">{totalUsers}</p>
               </div>
             </motion.div>
 
             <motion.div
               whileHover={{ y: -4 }}
-              className="glass-card bento-card p-6 rounded-2xl flex items-center space-x-4 border border-white/5"
+              className="glass-card p-6 rounded-2xl flex items-center space-x-4 border border-slate-200 bg-white shadow-sm"
             >
-              <div className="p-3 bg-emerald-500/10 rounded-xl text-emerald-400">
+              <div className="p-3 bg-emerald-50 rounded-xl text-emerald-600">
                 <Shield className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-xs text-zinc-500 font-bold uppercase tracking-wider">Admins Count</p>
-                <p className="text-2xl font-black mt-0.5 text-white">
+                <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">Admins Count</p>
+                <p className="text-2xl font-black mt-0.5 text-slate-900">
                   {(stats?.users?.roles?.ADMIN || 0) + (stats?.users?.roles?.SUPER_ADMIN || 0)}
                 </p>
               </div>
@@ -488,22 +484,22 @@ export const SuperAdminDashboard: React.FC = () => {
 
           {/* User role breakdown & Telemetry */}
           <div className="grid gap-6 md:grid-cols-3">
-            <div className="glass-card bento-card p-6 rounded-2xl border border-white/5 md:col-span-2 space-y-4">
-              <h2 className="text-xs font-extrabold text-zinc-400 uppercase tracking-wider flex items-center gap-2">
-                <Shield className="h-4 w-4 text-purple-400" /> User Roles Distribution
+            <div className="glass-card p-6 rounded-2xl border border-slate-200 bg-white shadow-sm md:col-span-2 space-y-4">
+              <h2 className="text-xs font-extrabold text-slate-500 uppercase tracking-wider flex items-center gap-2">
+                <Shield className="h-4 w-4 text-indigo-600" /> User Roles Distribution
               </h2>
               <div className="flex flex-col sm:flex-row items-center gap-6">
                 <div className="h-[140px] w-full sm:w-1/2">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={rolesData} layout="vertical" margin={{ left: -10, right: 10, top: 0, bottom: 0 }}>
-                      <XAxis type="number" stroke="#52525b" fontSize={9} tickLine={false} axisLine={false} />
-                      <YAxis type="category" dataKey="name" stroke="#52525b" fontSize={9} tickLine={false} axisLine={false} />
+                      <XAxis type="number" stroke="#64748b" fontSize={9} tickLine={false} axisLine={false} />
+                      <YAxis type="category" dataKey="name" stroke="#64748b" fontSize={9} tickLine={false} axisLine={false} />
                       <Tooltip
                         contentStyle={{
-                          background: 'rgba(9, 9, 11, 0.95)',
-                          border: '1px solid rgba(255, 255, 255, 0.1)',
+                          background: 'rgba(255, 255, 255, 0.95)',
+                          border: '1px solid #e2e8f0',
                           borderRadius: '10px',
-                          color: '#fff',
+                          color: '#0f172a',
                           fontSize: '10px'
                         }}
                       />
@@ -515,140 +511,47 @@ export const SuperAdminDashboard: React.FC = () => {
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
-                <div className="w-full sm:w-1/2 divide-y divide-white/5 text-xs">
+                <div className="w-full sm:w-1/2 divide-y divide-slate-100 text-xs">
                   <div className="py-2.5 flex justify-between">
-                    <span className="text-zinc-500">Standard Users</span>
-                    <span className="font-bold text-white">{stats?.users?.roles?.USER || 0}</span>
+                    <span className="text-slate-500">Standard Users</span>
+                    <span className="font-bold text-slate-900">{stats?.users?.roles?.USER || 0}</span>
                   </div>
                   <div className="py-2.5 flex justify-between">
-                    <span className="text-zinc-500">Platform Admins</span>
-                    <span className="font-bold text-blue-400">{stats?.users?.roles?.ADMIN || 0}</span>
+                    <span className="text-slate-500">Platform Admins</span>
+                    <span className="font-bold text-blue-600">{stats?.users?.roles?.ADMIN || 0}</span>
                   </div>
                   <div className="py-2.5 flex justify-between">
-                    <span className="text-zinc-500">Super Admins</span>
-                    <span className="font-bold text-emerald-400">{stats?.users?.roles?.SUPER_ADMIN || 0}</span>
+                    <span className="text-slate-500">Super Admins</span>
+                    <span className="font-bold text-emerald-600">{stats?.users?.roles?.SUPER_ADMIN || 0}</span>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Telemetry card */}
-            <div className="glass-card bento-card p-6 rounded-2xl border border-white/5">
-              <h2 className="text-sm font-extrabold tracking-tight mb-4 flex items-center gap-2 text-white uppercase tracking-wider">
-                <Database className="h-4 w-4 text-emerald-400" /> System Telemetry
+            <div className="glass-card p-6 rounded-2xl border border-slate-200 bg-white shadow-sm">
+              <h2 className="text-sm font-extrabold mb-4 flex items-center gap-2 text-slate-900 uppercase tracking-wider">
+                <Database className="h-4 w-4 text-emerald-600" /> System Telemetry
               </h2>
               <div className="space-y-4 text-xs">
                 <div className="flex justify-between items-center py-1">
-                  <span className="text-zinc-400">Database Status</span>
-                  <div className="flex items-center gap-1.5 font-bold text-emerald-400">
-                    <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="text-slate-500">Database Status</span>
+                  <div className="flex items-center gap-1.5 font-bold text-emerald-600">
+                    <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
                     CONNECTED
                   </div>
                 </div>
                 <div className="flex justify-between items-center py-1">
-                  <span className="text-zinc-400">API Server Status</span>
-                  <span className="font-bold text-white uppercase">ONLINE</span>
+                  <span className="text-slate-500">API Server Status</span>
+                  <span className="font-bold text-slate-900 uppercase">ONLINE</span>
                 </div>
                 <div className="flex justify-between items-center py-1">
-                  <span className="text-zinc-400">Mock Network Latency</span>
-                  <span className="font-bold text-white">14ms</span>
+                  <span className="text-slate-500">Network Latency</span>
+                  <span className="font-bold text-slate-900">14ms</span>
                 </div>
                 <div className="flex justify-between items-center py-1">
-                  <span className="text-zinc-400">Platform Uptime</span>
-                  <span className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-300">99.98%</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Interactive simulator & Security Audit feed */}
-          <div className="grid gap-6 md:grid-cols-3">
-            {/* MRR Simulation Widget */}
-            <div className="glass-card bento-card p-6 rounded-2xl border border-white/5 flex flex-col justify-between">
-              <div>
-                <h2 className="text-sm font-extrabold tracking-tight mb-2 flex items-center gap-2 text-white uppercase tracking-wider">
-                  <DollarSign className="h-4 w-4 text-purple-400" /> MRR Simulator
-                </h2>
-                <p className="text-[11px] text-zinc-400 leading-relaxed mb-6">
-                  Model revenue forecasting by simulating subscriber scaling and average pricing.
-                </p>
-                
-                <div className="space-y-5">
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-xs font-semibold">
-                      <span className="text-zinc-400">Total Subscribers</span>
-                      <span className="text-white font-bold">{simulatorSubscribers}</span>
-                    </div>
-                    <input
-                      type="range"
-                      min="10"
-                      max="5000"
-                      step="10"
-                      value={simulatorSubscribers}
-                      onChange={(e) => setSimulatorSubscribers(Number(e.target.value))}
-                      className="w-full cursor-pointer accent-purple-500"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-xs font-semibold">
-                      <span className="text-zinc-400">Avg Monthly Price</span>
-                      <span className="text-white font-bold">${simulatorPrice}</span>
-                    </div>
-                    <input
-                      type="range"
-                      min="5"
-                      max="200"
-                      step="1"
-                      value={simulatorPrice}
-                      onChange={(e) => setSimulatorPrice(Number(e.target.value))}
-                      className="w-full cursor-pointer accent-purple-500"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="border-t border-white/5 pt-4 mt-6 flex justify-between items-center">
-                <span className="text-xs text-zinc-400">Forecasted MRR:</span>
-                <span className="text-lg font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-400">
-                  ${(simulatorSubscribers * simulatorPrice).toLocaleString()}
-                </span>
-              </div>
-            </div>
-
-            {/* Live Event logs */}
-            <div className="glass-card bento-card p-6 rounded-2xl border border-white/5 md:col-span-2">
-              <h2 className="text-sm font-extrabold tracking-tight mb-3 flex items-center gap-2 text-white uppercase tracking-wider">
-                <Shield className="h-4 w-4 text-indigo-400" /> Platform Security Audits
-              </h2>
-              <p className="text-[11px] text-zinc-400 mb-4 leading-relaxed">
-                Live streaming system authentication and plan modifications. Verified using secure HTTP-Only JWT tokens.
-              </p>
-              <div className="bg-[#08080a] border border-white/5 rounded-xl p-4 font-mono text-[10px] text-zinc-400 space-y-2.5 max-h-[160px] overflow-y-auto">
-                <div className="flex justify-between border-b border-white/5 pb-1">
-                  <span className="text-zinc-500">[23:01:22]</span>
-                  <span className="text-purple-400 font-semibold">SUCCESS</span>
-                  <span className="text-zinc-300">Super Admin bootstrapped successfully via services/bootstrap</span>
-                </div>
-                <div className="flex justify-between border-b border-white/5 pb-1">
-                  <span className="text-zinc-500">[23:04:15]</span>
-                  <span className="text-emerald-400 font-semibold">GET</span>
-                  <span className="text-zinc-300">Fetched active subscription breakdown from Mongo replica</span>
-                </div>
-                <div className="flex justify-between border-b border-white/5 pb-1">
-                  <span className="text-zinc-500">[23:08:44]</span>
-                  <span className="text-purple-400 font-semibold">RESTORE</span>
-                  <span className="text-zinc-300">Pricing package "Enterprise Unlimited" status set to ACTIVE</span>
-                </div>
-                <div className="flex justify-between border-b border-white/5 pb-1">
-                  <span className="text-zinc-500">[23:12:01]</span>
-                  <span className="text-blue-400 font-semibold">AUTH</span>
-                  <span className="text-zinc-300">JWT verification completed successfully for token in request header</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-zinc-500">[23:19:33]</span>
-                  <span className="text-purple-400 font-semibold">UPGRADE</span>
-                  <span className="text-zinc-300">Manually upgraded client user details tier to Pro Annual</span>
+                  <span className="text-slate-500">Platform Uptime</span>
+                  <span className="font-bold text-emerald-600">99.98%</span>
                 </div>
               </div>
             </div>
@@ -663,9 +566,9 @@ export const SuperAdminDashboard: React.FC = () => {
       {activeTab === 'users' && (
         <div className="space-y-6">
           {/* Search bar */}
-          <div className="flex justify-between items-center glass-card border border-white/5 rounded-2xl p-4">
+          <div className="flex justify-between items-center bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
             <div className="relative w-full max-w-xs">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-zinc-500" />
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
               <input
                 type="text"
                 placeholder="Search users by name or email..."
@@ -674,10 +577,10 @@ export const SuperAdminDashboard: React.FC = () => {
                   setSearch(e.target.value);
                   setPage(1);
                 }}
-                className="pl-9 h-10 w-full rounded-md border border-white/10 bg-zinc-950 px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-purple-500"
+                className="pl-9 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-indigo-500"
               />
             </div>
-            <div className="text-xs text-zinc-500 font-semibold">
+            <div className="text-xs text-slate-500 font-semibold">
               Showing page {page} of {totalPages}
             </div>
           </div>
@@ -686,14 +589,14 @@ export const SuperAdminDashboard: React.FC = () => {
           {loadingUsers ? (
             <TableSkeleton rows={5} cols={4} />
           ) : users.length === 0 ? (
-            <div className="border border-dashed border-white/10 rounded-2xl p-12 text-center text-sm text-zinc-500 glass-card">
+            <div className="border border-dashed border-slate-200 rounded-2xl p-12 text-center text-sm text-slate-500 bg-white shadow-sm">
               No users found matching search criteria.
             </div>
           ) : (
-            <div className="border border-white/5 rounded-2xl overflow-hidden glass-card shadow-sm">
+            <div className="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm">
               <table className="w-full text-left text-sm border-collapse">
                 <thead>
-                  <tr className="border-b border-white/5 bg-white/[0.01] text-[10px] font-bold text-zinc-500 uppercase tracking-wider">
+                  <tr className="border-b border-slate-200 bg-slate-50/50 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
                     <th className="px-6 py-4">User Name</th>
                     <th className="px-6 py-4">Email</th>
                     <th className="px-6 py-4">Role Status</th>
@@ -701,7 +604,7 @@ export const SuperAdminDashboard: React.FC = () => {
                     <th className="px-6 py-4 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/5">
+                <tbody className="divide-y divide-slate-200">
                   {users.map((u, idx) => {
                     const isSelf = u._id === currentUser?._id;
                     const userActiveSubs = allSubscriptions.filter(
@@ -714,12 +617,12 @@ export const SuperAdminDashboard: React.FC = () => {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: idx * 0.04 }}
-                        className="hover:bg-white/[0.02] transition-colors"
+                        className="hover:bg-slate-50/50 transition-colors"
                       >
-                        <td className="px-6 py-4 font-semibold text-white">
-                          {u.name} {isSelf && <span className="text-[10px] text-zinc-500 font-normal ml-1">(You)</span>}
+                        <td className="px-6 py-4 font-semibold text-slate-900">
+                          {u.name} {isSelf && <span className="text-[10px] text-slate-400 font-normal ml-1">(You)</span>}
                         </td>
-                        <td className="px-6 py-4 text-zinc-400 truncate max-w-[200px]">{u.email}</td>
+                        <td className="px-6 py-4 text-slate-500 truncate max-w-[200px]">{u.email}</td>
                         <td className="px-6 py-4">
                           <Badge
                             variant={
@@ -741,13 +644,13 @@ export const SuperAdminDashboard: React.FC = () => {
                                 <Badge
                                   key={sub._id}
                                   variant="outline"
-                                  className="text-[10px] font-bold border-emerald-500/20 bg-emerald-500/5 text-emerald-400"
+                                  className="text-[10px] font-bold border-emerald-250 bg-emerald-50 text-emerald-700"
                                 >
                                   {sub.plan?.name || 'Active'}
                                 </Badge>
                               ))
                             ) : (
-                              <span className="text-xs text-zinc-500">None</span>
+                              <span className="text-xs text-slate-400">None</span>
                             )}
                           </div>
                         </td>
@@ -759,7 +662,7 @@ export const SuperAdminDashboard: React.FC = () => {
                               onChange={(e) =>
                                 handleRoleChange(u._id, e.target.value as any)
                               }
-                              className="h-8 rounded-md border border-white/10 bg-zinc-950 px-2 text-xs font-semibold text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-purple-500 disabled:opacity-50"
+                              className="h-8 rounded-xl border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-700 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-indigo-500 disabled:opacity-50"
                             >
                               <option value="USER">User</option>
                               <option value="ADMIN">Admin</option>
@@ -769,7 +672,7 @@ export const SuperAdminDashboard: React.FC = () => {
                             <Button
                               variant="outline"
                               size="sm"
-                              className="h-8 text-xs gap-1.5 border-white/10 hover:bg-white/5"
+                              className="h-8 text-xs gap-1.5 border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl"
                               onClick={() => handleOpenManageSub(u)}
                             >
                               <CreditCard className="h-3.5 w-3.5" /> Modify Plan
@@ -780,7 +683,7 @@ export const SuperAdminDashboard: React.FC = () => {
                               size="icon"
                               disabled={isSelf}
                               onClick={() => handleDeleteUser(u._id)}
-                              className="text-red-400 hover:bg-red-500/10 hover:text-red-300 h-8 w-8 rounded-md"
+                              className="text-red-650 hover:bg-red-50 hover:text-red-700 h-8 w-8 rounded-xl"
                               aria-label="Delete user"
                             >
                               <Trash2 className="h-4 w-4" />
@@ -803,7 +706,7 @@ export const SuperAdminDashboard: React.FC = () => {
                 size="sm"
                 disabled={page <= 1}
                 onClick={() => setPage((p) => Math.max(p - 1, 1))}
-                className="gap-1.5 border-white/10 hover:bg-white/5"
+                className="gap-1.5 border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl"
               >
                 <ArrowLeft className="h-3.5 w-3.5" /> Previous
               </Button>
@@ -812,7 +715,7 @@ export const SuperAdminDashboard: React.FC = () => {
                 size="sm"
                 disabled={page >= totalPages}
                 onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
-                className="gap-1.5 border-white/10 hover:bg-white/5"
+                className="gap-1.5 border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl"
               >
                 Next <ArrowRight className="h-3.5 w-3.5" />
               </Button>
@@ -824,16 +727,16 @@ export const SuperAdminDashboard: React.FC = () => {
       {/* Pricing logs list tab */}
       {activeTab === 'pricing-logs' && (
         <div className="space-y-4">
-          <h2 className="text-lg font-black tracking-tight text-white">System Pricing Change Audits</h2>
+          <h2 className="text-lg font-black tracking-tight text-slate-900">System Pricing Change Audits</h2>
           {pricingLogs.length === 0 ? (
-            <div className="border border-dashed border-white/10 rounded-2xl p-12 text-center text-sm text-zinc-500 glass-card">
+            <div className="border border-dashed border-slate-200 rounded-2xl p-12 text-center text-sm text-slate-500 bg-white shadow-sm">
               No price modification audits logged yet.
             </div>
           ) : (
-            <div className="border border-white/5 rounded-2xl overflow-hidden glass-card shadow-sm">
+            <div className="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm">
               <table className="w-full text-left text-sm border-collapse">
                 <thead>
-                  <tr className="border-b border-white/5 bg-white/[0.01] text-[10px] font-bold text-zinc-500 uppercase tracking-wider">
+                  <tr className="border-b border-slate-200 bg-slate-50/50 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
                     <th className="px-6 py-4">Plan Name</th>
                     <th className="px-6 py-4">Old Price</th>
                     <th className="px-6 py-4">New Price</th>
@@ -841,27 +744,27 @@ export const SuperAdminDashboard: React.FC = () => {
                     <th className="px-6 py-4">Date & Time</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/5">
+                <tbody className="divide-y divide-slate-200">
                   {pricingLogs.map((log, idx) => (
                     <motion.tr
                       key={log._id}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.04 }}
-                      className="hover:bg-white/[0.02] transition-colors"
+                      className="hover:bg-slate-50/50 transition-colors"
                     >
-                      <td className="px-6 py-4 font-semibold text-white">{log.planName}</td>
-                      <td className="px-6 py-4 text-zinc-400">${(log.oldPrice / 100).toFixed(2)}</td>
-                      <td className="px-6 py-4 text-emerald-400 font-extrabold">
+                      <td className="px-6 py-4 font-semibold text-slate-900">{log.planName}</td>
+                      <td className="px-6 py-4 text-slate-500">${(log.oldPrice / 100).toFixed(2)}</td>
+                      <td className="px-6 py-4 text-emerald-600 font-extrabold">
                         ${(log.newPrice / 100).toFixed(2)}
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex flex-col">
-                          <span className="font-semibold text-white">{log.changedBy?.name || 'Deleted Admin'}</span>
-                          <span className="text-[10px] text-zinc-500">{log.changedBy?.email || 'N/A'}</span>
+                          <span className="font-semibold text-slate-900">{log.changedBy?.name || 'Deleted Admin'}</span>
+                          <span className="text-[10px] text-slate-400">{log.changedBy?.email || 'N/A'}</span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-zinc-400">
+                      <td className="px-6 py-4 text-slate-500">
                         {new Date(log.changedAt).toLocaleString()}
                       </td>
                     </motion.tr>
@@ -877,36 +780,36 @@ export const SuperAdminDashboard: React.FC = () => {
       <Dialog isOpen={isCreateUserOpen} onClose={() => setIsCreateUserOpen(false)} title="Create User / Admin Account">
         <form onSubmit={handleCreateUserSubmit} className="space-y-4">
           <div className="space-y-1">
-            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Full Name</label>
+            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Full Name</label>
             <input
               type="text"
               required
               placeholder="e.g. John Doe"
               value={createName}
               onChange={(e) => setCreateName(e.target.value)}
-              className="w-full h-10 rounded-md border border-white/10 bg-zinc-950 px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-purple-500"
+              className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-indigo-500"
             />
           </div>
 
           <div className="space-y-1">
-            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Email Address</label>
+            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Email Address</label>
             <input
               type="email"
               required
               placeholder="e.g. john@company.com"
               value={createEmail}
               onChange={(e) => setCreateEmail(e.target.value)}
-              className="w-full h-10 rounded-md border border-white/10 bg-zinc-950 px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-purple-500"
+              className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-indigo-500"
             />
           </div>
 
           <div className="space-y-1">
             <div className="flex justify-between items-center">
-              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Password</label>
+              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Password</label>
               <button
                 type="button"
                 onClick={handleSuggestPassword}
-                className="text-[10px] font-bold text-purple-400 hover:text-purple-300 transition-colors flex items-center gap-1 bg-purple-500/10 border border-purple-500/20 px-2.5 py-0.5 rounded-full animate-pulse"
+                className="text-[10px] font-bold text-indigo-600 hover:text-indigo-700 transition-colors flex items-center gap-1 bg-indigo-50 border border-indigo-100 px-2.5 py-0.5 rounded-full"
               >
                 <Sparkles className="h-3 w-3" /> Suggest Strong
               </button>
@@ -917,28 +820,28 @@ export const SuperAdminDashboard: React.FC = () => {
               placeholder="Min 8 characters"
               value={createPassword}
               onChange={(e) => setCreatePassword(e.target.value)}
-              className="w-full h-10 rounded-md border border-white/10 bg-zinc-950 px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-purple-500"
+              className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-indigo-500"
             />
             {createPassword && (
-              <div className="bg-[#0b0c10] border border-white/5 p-2.5 rounded-lg space-y-1.5 mt-1.5 text-[10px]">
+              <div className="bg-slate-55 border border-slate-200 p-2.5 rounded-xl space-y-1.5 mt-1.5 text-[10px]">
                 <div className="grid grid-cols-2 gap-1.5">
-                  <div className={`flex items-center space-x-1 ${passwordChecks.length ? 'text-emerald-400' : 'text-zinc-550'}`}>
+                  <div className={`flex items-center space-x-1 ${passwordChecks.length ? 'text-emerald-600' : 'text-slate-400'}`}>
                     {passwordChecks.length ? <CheckCircle className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
                     <span>8+ characters</span>
                   </div>
-                  <div className={`flex items-center space-x-1 ${passwordChecks.uppercase ? 'text-emerald-400' : 'text-zinc-550'}`}>
+                  <div className={`flex items-center space-x-1 ${passwordChecks.uppercase ? 'text-emerald-600' : 'text-slate-400'}`}>
                     {passwordChecks.uppercase ? <CheckCircle className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
                     <span>1+ uppercase</span>
                   </div>
-                  <div className={`flex items-center space-x-1 ${passwordChecks.lowercase ? 'text-emerald-400' : 'text-zinc-550'}`}>
+                  <div className={`flex items-center space-x-1 ${passwordChecks.lowercase ? 'text-emerald-600' : 'text-slate-400'}`}>
                     {passwordChecks.lowercase ? <CheckCircle className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
                     <span>1+ lowercase</span>
                   </div>
-                  <div className={`flex items-center space-x-1 ${passwordChecks.digit ? 'text-emerald-400' : 'text-zinc-550'}`}>
+                  <div className={`flex items-center space-x-1 ${passwordChecks.digit ? 'text-emerald-600' : 'text-slate-400'}`}>
                     {passwordChecks.digit ? <CheckCircle className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
                     <span>1+ number</span>
                   </div>
-                  <div className={`flex items-center space-x-1 ${passwordChecks.special ? 'text-emerald-400' : 'text-zinc-550'}`}>
+                  <div className={`flex items-center space-x-1 ${passwordChecks.special ? 'text-emerald-600' : 'text-slate-400'}`}>
                     {passwordChecks.special ? <CheckCircle className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
                     <span>1+ special</span>
                   </div>
@@ -948,11 +851,11 @@ export const SuperAdminDashboard: React.FC = () => {
           </div>
 
           <div className="space-y-1">
-            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Access Level / Role</label>
+            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Access Level / Role</label>
             <select
               value={createRole}
               onChange={(e) => setCreateRole(e.target.value as any)}
-              className="w-full h-10 rounded-md border border-white/10 bg-zinc-950 px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-purple-500"
+              className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-indigo-500"
             >
               <option value="USER">User (Standard Access)</option>
               <option value="ADMIN">Admin (Plan CRUD access)</option>
@@ -960,11 +863,11 @@ export const SuperAdminDashboard: React.FC = () => {
             </select>
           </div>
 
-          <div className="flex justify-end space-x-2 pt-4 border-t border-white/5">
-            <Button type="button" variant="outline" onClick={() => setIsCreateUserOpen(false)} className="border-white/10 hover:bg-white/5">
+          <div className="flex justify-end space-x-2 pt-4 border-t border-slate-200">
+            <Button type="button" variant="outline" onClick={() => setIsCreateUserOpen(false)} className="border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl">
               Cancel
             </Button>
-            <Button type="submit" disabled={creatingUser || (createPassword !== '' && !isCreatePasswordStrong)} className="bg-white text-black hover:bg-zinc-200">
+            <Button type="submit" disabled={creatingUser || (createPassword !== '' && !isCreatePasswordStrong)} className="bg-indigo-600 text-white hover:bg-indigo-700 rounded-xl">
               {creatingUser ? 'Creating...' : 'Create Account'}
             </Button>
           </div>
@@ -976,13 +879,13 @@ export const SuperAdminDashboard: React.FC = () => {
         {subSelectedUser && (
           <div className="space-y-6">
             <div>
-              <p className="text-sm font-semibold text-white">{subSelectedUser.name}</p>
-              <p className="text-xs text-zinc-500">{subSelectedUser.email}</p>
+              <p className="text-sm font-semibold text-slate-900">{subSelectedUser.name}</p>
+              <p className="text-xs text-slate-500">{subSelectedUser.email}</p>
             </div>
 
             {/* Active Subscriptions List */}
             <div className="space-y-3">
-              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider block">Active Subscriptions</label>
+              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Active Subscriptions</label>
               {(() => {
                 const activeSubs = allSubscriptions.filter(
                   (s) => (s.user as any)?._id === subSelectedUser._id && s.status === 'ACTIVE'
@@ -990,7 +893,7 @@ export const SuperAdminDashboard: React.FC = () => {
 
                 if (activeSubs.length === 0) {
                   return (
-                    <div className="text-xs text-zinc-500 border border-dashed border-white/10 rounded-xl p-4 text-center bg-zinc-950/40">
+                    <div className="text-xs text-slate-500 border border-dashed border-slate-200 rounded-xl p-4 text-center bg-slate-50">
                       No active subscriptions.
                     </div>
                   );
@@ -999,17 +902,17 @@ export const SuperAdminDashboard: React.FC = () => {
                 return (
                   <div className="space-y-2 max-h-[200px] overflow-y-auto pr-1">
                     {activeSubs.map((sub) => (
-                      <div key={sub._id} className="flex justify-between items-center bg-white/[0.02] border border-white/5 rounded-xl p-3 text-xs">
+                      <div key={sub._id} className="flex justify-between items-center bg-slate-50 border border-slate-100 rounded-xl p-3 text-xs">
                         <div className="space-y-0.5">
-                          <p className="font-semibold text-white">{sub.plan?.name || 'Unknown Plan'}</p>
-                          <p className="text-[10px] text-zinc-400">
+                          <p className="font-semibold text-slate-900">{sub.plan?.name || 'Unknown Plan'}</p>
+                          <p className="text-[10px] text-slate-550">
                             ${sub.plan ? (sub.plan.price / 100).toFixed(2) : '0'} / {sub.plan?.billingCycle.toLowerCase()} • Renews {new Date(sub.endDate).toLocaleDateString()}
                           </p>
                         </div>
                         <Button
                           variant="destructive"
                           size="sm"
-                          className="h-8 text-xs font-semibold px-3"
+                          className="h-8 text-xs font-semibold px-3 rounded-xl"
                           disabled={updatingSub}
                           onClick={() => handleCancelUserSubscription(sub._id, sub.plan?.name || '')}
                         >
@@ -1023,14 +926,14 @@ export const SuperAdminDashboard: React.FC = () => {
             </div>
 
             {/* Add Subscription Form */}
-            <form onSubmit={handleAddUserSubscriptionSubmit} className="space-y-4 border-t border-white/5 pt-4">
-              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider block">Add New Subscription</label>
+            <form onSubmit={handleAddUserSubscriptionSubmit} className="space-y-4 border-t border-slate-250 pt-4">
+              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Add New Subscription</label>
               
               <div className="space-y-2">
                 <select
                   value={subSelectedPlanId}
                   onChange={(e) => setSubSelectedPlanId(e.target.value)}
-                  className="w-full h-10 rounded-md border border-white/10 bg-zinc-950 px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-purple-500"
+                  className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-indigo-500"
                 >
                   <option value="none">Select plan to add...</option>
                   {(() => {
@@ -1058,11 +961,11 @@ export const SuperAdminDashboard: React.FC = () => {
 
                 return (
                   <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider block">Duration (months)</label>
+                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Duration (months)</label>
                     <select
                       value={subOverrideMonths}
                       onChange={(e) => setSubOverrideMonths(Number(e.target.value))}
-                      className="w-full h-10 rounded-md border border-white/10 bg-zinc-950 px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-purple-500"
+                      className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-indigo-500"
                     >
                       {[1, 2, 3, 6, 12].map((m) => (
                         <option key={m} value={m}>
@@ -1075,13 +978,13 @@ export const SuperAdminDashboard: React.FC = () => {
               })()}
 
               <div className="flex justify-end space-x-2 pt-2">
-                <Button type="button" variant="outline" onClick={() => setIsManageSubOpen(false)} className="border-white/10 hover:bg-white/5">
+                <Button type="button" variant="outline" onClick={() => setIsManageSubOpen(false)} className="border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl">
                   Close
                 </Button>
                 <Button
                   type="submit"
                   disabled={updatingSub || subSelectedPlanId === 'none'}
-                  className="bg-white text-black hover:bg-zinc-200"
+                  className="bg-indigo-600 text-white hover:bg-indigo-700 rounded-xl"
                 >
                   {updatingSub ? 'Adding...' : 'Add Subscription'}
                 </Button>

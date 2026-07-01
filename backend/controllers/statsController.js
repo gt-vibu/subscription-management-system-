@@ -27,7 +27,21 @@ const getPricingLogs = async (req, res, next) => {
   }
 };
 
+/**
+ * Get public platform metrics (MRR, user count, active subscriptions, recent users list)
+ * Accessible by: PUBLIC
+ */
+const getPublicStats = async (req, res, next) => {
+  try {
+    const publicStats = await statsService.getPublicPlatformStats();
+    return sendResponse(res, 200, publicStats);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getPlatformStats,
-  getPricingLogs
+  getPricingLogs,
+  getPublicStats
 };

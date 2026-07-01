@@ -54,27 +54,35 @@ export const Login: React.FC = () => {
   };
 
   return (
-    <div className="relative flex min-h-[80vh] items-center justify-center overflow-hidden px-4">
+    <div className="relative flex min-h-[100vh] items-center justify-center overflow-hidden px-4 bg-slate-50 text-slate-900">
       {/* Drifting Glow Backdrops */}
-      <div className="glow-bg-blob-1 animate-drift opacity-50" />
-      <div className="glow-bg-blob-2 animate-drift-reverse opacity-45" />
+      <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-indigo-200/20 blur-[120px] pointer-events-none z-0" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[450px] h-[450px] rounded-full bg-purple-200/20 blur-[100px] pointer-events-none z-0" />
 
       {/* Grid Pattern overlay */}
-      <div className="absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] bg-[size:32px_32px] opacity-70 pointer-events-none z-0" />
 
-      <div className="glass-card mx-auto flex w-full flex-col justify-center space-y-6 max-w-[380px] rounded-3xl p-8 border border-white/10 shadow-2xl relative z-10">
+      <div className="glass-card mx-auto flex w-full flex-col justify-center space-y-6 max-w-[380px] rounded-3xl p-8 shadow-2xl relative z-10 bg-white/80 border border-slate-200">
         <div className="flex flex-col space-y-2 text-center">
-          <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">
+          <Link to="/" className="flex items-center justify-center space-x-2 shrink-0 mb-2">
+            <span className="h-6 w-6 rounded-md bg-slate-900 text-white flex items-center justify-center font-extrabold text-xs">
+              S
+            </span>
+            <span className="font-extrabold tracking-tight text-sm text-slate-900 uppercase">
+              Subscripto
+            </span>
+          </Link>
+          <h1 className="text-xl font-extrabold tracking-tight text-slate-900">
             Welcome back
           </h1>
-          <p className="text-xs text-zinc-400">
+          <p className="text-xs text-slate-500">
             Enter your credentials to access your dashboard
           </p>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="space-y-1">
-            <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider block" htmlFor="email">
+          <div className="space-y-1 text-left">
+            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1" htmlFor="email">
               Email Address
             </label>
             <Input
@@ -85,16 +93,16 @@ export const Login: React.FC = () => {
               autoComplete="email"
               autoCorrect="off"
               disabled={loading}
-              className="bg-black/30 border-zinc-800 focus:border-purple-500 transition-colors h-10 rounded-xl"
+              className="bg-white border-slate-200 focus:border-indigo-500 text-slate-900 transition-colors h-10 rounded-xl"
               {...register('email')}
             />
             {errors.email && (
-              <p className="text-xs text-destructive font-medium mt-1">{errors.email.message}</p>
+              <p className="text-xs text-destructive font-semibold mt-1">{errors.email.message}</p>
             )}
           </div>
 
-          <div className="space-y-1">
-            <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider block" htmlFor="password">
+          <div className="space-y-1 text-left">
+            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1" htmlFor="password">
               Password
             </label>
             <Input
@@ -102,22 +110,26 @@ export const Login: React.FC = () => {
               type="password"
               placeholder="••••••••"
               disabled={loading}
-              className="bg-black/30 border-zinc-800 focus:border-purple-500 transition-colors h-10 rounded-xl"
+              className="bg-white border-slate-200 focus:border-indigo-500 text-slate-900 transition-colors h-10 rounded-xl"
               {...register('password')}
             />
             {errors.password && (
-              <p className="text-xs text-destructive font-medium mt-1">{errors.password.message}</p>
+              <p className="text-xs text-destructive font-semibold mt-1">{errors.password.message}</p>
             )}
           </div>
 
-          <Button type="submit" className="w-full h-10 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white border-0 font-medium rounded-xl shadow-lg mt-4" loading={loading}>
+          <Button 
+            type="submit" 
+            className="w-full h-10 bg-slate-900 hover:bg-slate-800 text-white border-0 font-bold rounded-xl shadow-lg mt-4" 
+            loading={loading}
+          >
             Sign In
           </Button>
         </form>
 
-        <p className="px-8 text-center text-xs text-zinc-400 border-t border-white/5 pt-4">
+        <p className="px-8 text-center text-xs text-slate-500 border-t border-slate-100 pt-4">
           Don't have an account?{' '}
-          <Link to="/register" className="underline underline-offset-4 hover:text-purple-400 font-semibold transition-colors">
+          <Link to="/register" className="underline underline-offset-4 hover:text-indigo-600 font-bold transition-colors">
             Sign Up
           </Link>
         </p>

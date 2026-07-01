@@ -70,3 +70,19 @@ export interface PlatformStats {
   subscriptions: SubscriptionStats;
   plans: PlanStatsItem[];
 }
+
+export interface PublicSubscribersItem {
+  id: string;
+  name: string;
+  email: string;
+  created: string;
+  status: string;
+  planName: string;
+}
+
+export interface PublicStats {
+  totalUsers: number;
+  activeSubs: number;
+  totalMRR: number; // in cents
+  recentSubscribers: PublicSubscribersItem[];
+}

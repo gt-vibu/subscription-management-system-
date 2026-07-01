@@ -124,41 +124,41 @@ export const Catalog: React.FC = () => {
   }
 
   return (
-    <div className="py-6 space-y-10">
+    <div className="py-6 space-y-10 text-slate-900">
       {/* Title */}
       <div className="text-center space-y-3 max-w-xl mx-auto">
-        <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl bg-gradient-to-r from-foreground to-foreground/75 bg-clip-text text-transparent">
+        <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl text-slate-900">
           SaaS Pricing Plans
         </h1>
-        <p className="text-md text-muted-foreground leading-relaxed">
+        <p className="text-md text-slate-500 leading-relaxed">
           Subscribe to multiple plans to unlock different feature sets. Manage all from your dashboard.
         </p>
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="flex flex-col sm:flex-row gap-4 justify-between items-center glass-card border border-border/30 rounded-xl p-4 max-w-4xl mx-auto">
+      <div className="flex flex-col sm:flex-row gap-4 justify-between items-center bg-white border border-slate-200 rounded-2xl p-4 max-w-4xl mx-auto shadow-sm">
         <div className="relative w-full sm:max-w-xs">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
           <input
             type="text"
             placeholder="Search plans..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 h-10 w-full rounded-md border border-input bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            className="pl-9 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-indigo-500"
           />
         </div>
 
         <div className="flex items-center space-x-2 w-full sm:w-auto justify-end">
-          <Filter className="h-4 w-4 text-muted-foreground hidden sm:block" />
-          <div className="flex border border-border/20 rounded-md p-0.5 bg-background/50">
+          <Filter className="h-4 w-4 text-slate-400 hidden sm:block" />
+          <div className="flex border border-slate-200 rounded-xl p-0.5 bg-slate-100">
             {(['ALL', 'MONTHLY', 'ANNUAL'] as const).map((cycle) => (
               <button
                 key={cycle}
                 onClick={() => setCycleFilter(cycle)}
-                className={`px-3 py-1 text-xs font-semibold rounded-md transition-all ${
+                className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all ${
                   cycleFilter === cycle
-                    ? 'bg-foreground text-background shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/10'
+                    ? 'bg-white text-slate-900 shadow-sm border border-slate-200'
+                    : 'text-slate-550 hover:text-slate-900 hover:bg-slate-200/50'
                 }`}
               >
                 {cycle.charAt(0) + cycle.slice(1).toLowerCase()}
@@ -171,18 +171,18 @@ export const Catalog: React.FC = () => {
       {/* Active Subscriptions Count */}
       {activeSubs.length > 0 && (
         <div className="text-center">
-          <span className="text-xs text-muted-foreground bg-white/5 border border-white/10 rounded-full px-4 py-1.5 inline-flex items-center gap-1.5">
-            <Sparkles className="h-3 w-3 text-purple-400" />
-            You have <span className="font-bold text-white">{activeSubs.length}</span> active {activeSubs.length === 1 ? 'subscription' : 'subscriptions'}
+          <span className="text-xs text-slate-650 bg-slate-100 border border-slate-200 rounded-full px-4 py-1.5 inline-flex items-center gap-1.5 font-semibold">
+            <Sparkles className="h-3 w-3 text-indigo-600" />
+            You have <span className="font-bold text-slate-900">{activeSubs.length}</span> active {activeSubs.length === 1 ? 'subscription' : 'subscriptions'}
           </span>
         </div>
       )}
 
       {/* Catalog Cards Grid */}
       {filteredPlans.length === 0 ? (
-        <div className="text-center py-12 border border-dashed rounded-xl max-w-2xl mx-auto space-y-4 glass-card">
-          <p className="text-muted-foreground font-medium">No active pricing plans found matching criteria.</p>
-          <Button variant="outline" size="sm" onClick={() => { setSearch(''); setCycleFilter('ALL'); }}>
+        <div className="text-center py-12 border border-dashed border-slate-300 rounded-2xl max-w-2xl mx-auto space-y-4 bg-white shadow-sm">
+          <p className="text-slate-500 font-medium">No active pricing plans found matching criteria.</p>
+          <Button variant="outline" size="sm" className="rounded-xl border-slate-200 text-slate-700" onClick={() => { setSearch(''); setCycleFilter('ALL'); }}>
             Reset Filters
           </Button>
         </div>
@@ -205,11 +205,9 @@ export const Catalog: React.FC = () => {
             const alreadySubscribed = isSubscribedToPlan(plan._id);
             
             let btnLabel = 'Subscribe';
-            let btnVariant: 'default' | 'outline' | 'secondary' = 'default';
             
             if (alreadySubscribed) {
               btnLabel = 'Subscribed ✓';
-              btnVariant = 'secondary';
             }
 
             const isPro = plan.name.toLowerCase().includes('pro');
@@ -224,11 +222,11 @@ export const Catalog: React.FC = () => {
                 whileHover={{
                   y: -8,
                   scale: 1.015,
-                  boxShadow: '0 20px 40px -15px rgba(147, 51, 234, 0.15)',
-                  borderColor: 'rgba(147, 51, 234, 0.35)'
+                  boxShadow: '0 20px 40px -15px rgba(99, 102, 241, 0.08)',
+                  borderColor: '#818cf8'
                 }}
-                className={`relative flex flex-col justify-between rounded-2xl border bg-card/65 backdrop-blur-md glass-card p-8 shadow-sm transition-all duration-300 ${
-                  alreadySubscribed ? 'ring-2 ring-purple-500 border-purple-500/40' : 'border-border/30'
+                className={`relative flex flex-col justify-between rounded-2xl border p-8 shadow-sm transition-all duration-300 bg-white ${
+                  alreadySubscribed ? 'ring-2 ring-indigo-600 border-indigo-650' : 'border-slate-200'
                 }`}
               >
                 {/* Popular Badge indicator with float & icon */}
@@ -236,7 +234,7 @@ export const Catalog: React.FC = () => {
                   <motion.span
                     animate={{ y: [0, -3, 0] }}
                     transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-                    className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-3.5 py-1 text-[10px] font-bold tracking-wider uppercase shadow-md flex items-center gap-1 border border-white/10"
+                    className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-indigo-600 to-indigo-700 text-white px-3.5 py-1 text-[10px] font-bold tracking-wider uppercase shadow-md flex items-center gap-1 border border-indigo-500/20"
                   >
                     <Sparkles className="h-3 w-3" /> Most Popular
                   </motion.span>
@@ -245,46 +243,46 @@ export const Catalog: React.FC = () => {
                 <div className="space-y-6">
                   {/* Plan Meta */}
                   <div className="space-y-2">
-                    <h3 className="text-2xl font-extrabold tracking-tight text-foreground">{plan.name}</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed min-h-[40px]">
+                    <h3 className="text-2xl font-extrabold tracking-tight text-slate-900">{plan.name}</h3>
+                    <p className="text-sm text-slate-550 leading-relaxed min-h-[40px]">
                       {plan.description}
                     </p>
                   </div>
 
                   {/* Price info */}
-                  <div className="flex items-baseline text-foreground">
+                  <div className="flex items-baseline text-slate-900">
                     <span className="text-4xl font-extrabold tracking-tight">
                       ${(plan.price / 100).toFixed(2)}
                     </span>
-                    <span className="ml-1 text-sm font-semibold text-muted-foreground">
+                    <span className="ml-1 text-sm font-semibold text-slate-550">
                       /{plan.billingCycle === 'ANNUAL' ? 'yr' : 'mo'}
                     </span>
                   </div>
 
                   {/* Features list */}
-                  <ul className="space-y-3.5 text-sm text-muted-foreground border-t border-border/20 pt-6">
+                  <ul className="space-y-3.5 text-sm text-slate-650 border-t border-slate-100 pt-6">
                     {plan.features.map((feature, idx) => (
                       <li key={idx} className="flex items-center gap-2.5">
-                        <Check className="h-4 w-4 shrink-0 text-foreground" />
-                        <span className="text-foreground/90">{feature}</span>
+                        <Check className="h-4 w-4 shrink-0 text-slate-950" />
+                        <span className="text-slate-700 font-semibold">{feature}</span>
                       </li>
                     ))}
                   </ul>
 
                   {/* Customizable Duration (Monthly only) */}
                   {plan.billingCycle === 'MONTHLY' && !alreadySubscribed && (
-                    <div className="mt-6 flex items-center justify-between border-t border-border/10 pt-4">
-                      <span className="text-xs text-zinc-400 font-medium">Duration:</span>
+                    <div className="mt-6 flex items-center justify-between border-t border-slate-100 pt-4">
+                      <span className="text-xs text-slate-500 font-medium">Duration:</span>
                       <select
                         value={selectedMonths[plan._id] || 1}
                         onChange={(e) => {
                           const val = Number(e.target.value);
                           setSelectedMonths((prev) => ({ ...prev, [plan._id]: val }));
                         }}
-                        className="bg-zinc-900 border border-white/10 rounded-md px-3 py-1.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-zinc-600 transition-all font-semibold"
+                        className="bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all font-semibold"
                       >
                         {[1, 2, 3, 6, 12].map((m) => (
-                          <option key={m} value={m} className="bg-zinc-950 text-xs">
+                          <option key={m} value={m} className="bg-white text-xs">
                             {m} {m === 1 ? 'Month' : 'Months'}
                           </option>
                         ))}
@@ -297,15 +295,18 @@ export const Catalog: React.FC = () => {
                 <div className="mt-8">
                   <Button
                     onClick={() => handleAction(plan)}
-                    className="w-full shadow-sm text-xs font-semibold py-2.5"
-                    variant={btnVariant}
+                    className={`w-full shadow-sm text-xs font-semibold py-2.5 rounded-xl ${
+                      alreadySubscribed
+                        ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-250 cursor-default'
+                        : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                    }`}
                     disabled={!!(user && user.role !== 'USER') || alreadySubscribed}
                     loading={submittingId === plan._id}
                   >
                     {btnLabel}
                   </Button>
                   {user && user.role !== 'USER' && (
-                    <p className="text-[10px] text-center text-muted-foreground mt-2">
+                    <p className="text-[10px] text-center text-slate-500 mt-2 font-semibold">
                       Disabled for Admin roles
                     </p>
                   )}

@@ -5,6 +5,9 @@ const { restrictTo } = require('../middlewares/roleMiddleware');
 
 const router = express.Router();
 
+// Public stats accessible without authentication
+router.get('/public', statsController.getPublicStats);
+
 // Apply auth protection globally
 router.use(protect);
 

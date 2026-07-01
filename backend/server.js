@@ -84,6 +84,11 @@ if (shouldCluster && cluster.isMaster) {
             return callback(null, true);
           }
           
+          // Allow any Vercel deployments (including branch previews)
+          if (/\.vercel\.app$/.test(origin)) {
+            return callback(null, true);
+          }
+          
           return callback(new Error('Not allowed by CORS'));
         },
         credentials: true,

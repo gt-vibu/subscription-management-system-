@@ -88,7 +88,68 @@ const getPricingLogs = async () => {
     .sort({ changedAt: -1 });
 };
 
+/**
+ * Get public platform stats for landing page dashboard mockup
+ */
+const getPublicPlatformStats = async () => {
+  const [
+    totalUsers,
+    activeSubscriptionsCount,
+    activeSubscriptionsList,
+    recentSubscriptions
+  ] = await Promise.all([
+    User.countDocuments({}),
+    Subscription.countDocuments({ status: 'ACTIVE' }),
+    Subscription.find({ status: 'ACTIVE' }).populate('plan'),
+    Subscription.find({})
+      .populate('user', 'name email')
+      .populate('plan', 'name')
+      .sort({ createdAt: -1 })
+      .limit(3)
+  ]);
+
+  // Calculate MRR
+  let mrrInCents = 0;
+  activeSubscriptionsList.forEach((sub) => {
+    if (!sub.plan) return;
+    const planPrice = sub.plan.price;
+    const contribution = sub.plan.billingCycle === 'ANNUAL' ? Math.round(planPrice / 12) : planPrice;
+    mrrInCents += contribution;
+  });
+
+  // Format recent subscribers securely
+  const recent = recentSubscriptions.map((sub) => {
+    const u = sub.user;
+    const obfuscateEmail = (email) => {
+      if (!email) return 'N/A';
+      const parts = email.split('@');
+      if (parts.length !== 2) return email;
+      const name = parts[0];
+      const domain = parts[1];
+      if (name.length <= 2) return `${name[0]}***@${domain}`;
+      return `${name.substring(0, 2)}***${name[name.length - 1]}@${domain}`;
+    };
+
+    return {
+      id: sub._id,
+      name: u ? u.name : 'Unknown User',
+      email: u ? obfuscateEmail(u.email) : 'N/A',
+      created: sub.createdAt,
+      status: sub.status,
+      planName: sub.plan ? sub.plan.name : 'Unknown Plan'
+    };
+  });
+
+  return {
+    totalUsers,
+    activeSubs: activeSubscriptionsCount,
+    totalMRR: mrrInCents,
+    recentSubscribers: recent
+  };
+};
+
 module.exports = {
   getPlatformStats,
-  getPricingLogs
+  getPricingLogs,
+  getPublicPlatformStats
 };

@@ -5,6 +5,7 @@ import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 
 // Pages
+import LandingPage from './pages/LandingPage';
 import Catalog from './pages/Catalog';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -18,28 +19,28 @@ function App() {
       <AuthProvider>
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Layout />}>
-              {/* Public subscription catalog */}
-              <Route index element={<Catalog />} />
+            {/* Public Landing Page */}
+            <Route path="/" element={<LandingPage />} />
 
-              {/* Authentication routes */}
-              <Route path="login" element={<Login />} />
-              <Route path="register" element={<Register />} />
+            {/* Authentication routes (full page) */}
+            <Route path="login" element={<Login />} />
+            <Route path="register" element={<Register />} />
 
-              {/* Role-protected dashboard routes */}
-              <Route
-                path="dashboard"
-                element={
-                  <ProtectedRoute>
-                    <Dashboard />
-                  </ProtectedRoute>
-                }
-              />
-
-              {/* Error boundary and fallback pages */}
-              <Route path="unauthorized" element={<Unauthorized />} />
-              <Route path="*" element={<NotFound />} />
+            {/* Protected dashboard and portal routes */}
+            <Route
+              element={
+                <ProtectedRoute>
+                  <Layout />
+                </ProtectedRoute>
+              }
+            >
+              <Route path="dashboard" element={<Dashboard />} />
+              <Route path="catalog" element={<Catalog />} />
             </Route>
+
+            {/* Error boundary and fallback pages */}
+            <Route path="unauthorized" element={<Unauthorized />} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
       </AuthProvider>

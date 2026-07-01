@@ -74,7 +74,6 @@ export const Register: React.FC = () => {
     const all = uppercase + lowercase + digits + specials;
 
     let pass = '';
-    // Ensure we satisfy all conditions
     pass += uppercase[Math.floor(Math.random() * uppercase.length)];
     pass += lowercase[Math.floor(Math.random() * lowercase.length)];
     pass += digits[Math.floor(Math.random() * digits.length)];
@@ -84,15 +83,12 @@ export const Register: React.FC = () => {
       pass += all[Math.floor(Math.random() * all.length)];
     }
 
-    // Shuffle
     const suggested = pass.split('').sort(() => 0.5 - Math.random()).join('');
 
-    // Fill form fields
     setValue('password', suggested, { shouldValidate: true });
     setValue('confirmPassword', suggested, { shouldValidate: true });
     trigger(['password', 'confirmPassword']);
 
-    // Copy to clipboard
     navigator.clipboard.writeText(suggested);
 
     toast({
@@ -124,30 +120,38 @@ export const Register: React.FC = () => {
   };
 
   return (
-    <div className="relative flex min-h-[85vh] items-center justify-center overflow-hidden px-4">
+    <div className="relative flex min-h-[100vh] items-center justify-center overflow-hidden px-4 bg-slate-50 text-slate-900">
       {/* Drifting Glow Backdrops */}
-      <div className="glow-bg-blob-1 animate-drift opacity-50" />
-      <div className="glow-bg-blob-2 animate-drift-reverse opacity-45" />
+      <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-indigo-200/20 blur-[120px] pointer-events-none z-0" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[450px] h-[450px] rounded-full bg-purple-200/20 blur-[100px] pointer-events-none z-0" />
 
       {/* Grid Pattern overlay */}
-      <div className="absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] bg-[size:32px_32px] opacity-70 pointer-events-none z-0" />
 
-      <div className="glass-card mx-auto flex w-full flex-col justify-center space-y-6 max-w-[420px] rounded-3xl p-8 border border-white/10 shadow-2xl relative z-10">
+      <div className="glass-card mx-auto flex w-full flex-col justify-center space-y-6 max-w-[420px] rounded-3xl p-8 shadow-2xl relative z-10 bg-white/80 border border-slate-200">
         
         {/* Header */}
         <div className="flex flex-col space-y-2 text-center">
-          <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">
+          <Link to="/" className="flex items-center justify-center space-x-2 shrink-0 mb-2">
+            <span className="h-6 w-6 rounded-md bg-slate-900 text-white flex items-center justify-center font-extrabold text-xs">
+              S
+            </span>
+            <span className="font-extrabold tracking-tight text-sm text-slate-900 uppercase">
+              Subscripto
+            </span>
+          </Link>
+          <h1 className="text-xl font-extrabold tracking-tight text-slate-900">
             Create an account
           </h1>
-          <p className="text-xs text-zinc-400">
+          <p className="text-xs text-slate-500">
             Enter your details to register as a new client
           </p>
         </div>
 
         {/* Register Form */}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="space-y-1">
-            <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider" htmlFor="name">
+          <div className="space-y-1 text-left">
+            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1" htmlFor="name">
               Full Name
             </label>
             <Input
@@ -155,16 +159,16 @@ export const Register: React.FC = () => {
               type="text"
               placeholder="John Doe"
               disabled={loading}
-              className="bg-black/30 border-zinc-800 focus:border-purple-500 transition-colors h-10 rounded-xl"
+              className="bg-white border-slate-200 focus:border-indigo-500 text-slate-900 transition-colors h-10 rounded-xl"
               {...register('name')}
             />
             {errors.name && (
-              <p className="text-xs text-destructive font-medium mt-1">{errors.name.message}</p>
+              <p className="text-xs text-destructive font-semibold mt-1">{errors.name.message}</p>
             )}
           </div>
 
-          <div className="space-y-1">
-            <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider" htmlFor="email">
+          <div className="space-y-1 text-left">
+            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1" htmlFor="email">
               Email Address
             </label>
             <Input
@@ -175,26 +179,26 @@ export const Register: React.FC = () => {
               autoComplete="email"
               autoCorrect="off"
               disabled={loading}
-              className="bg-black/30 border-zinc-800 focus:border-purple-500 transition-colors h-10 rounded-xl"
+              className="bg-white border-slate-200 focus:border-indigo-500 text-slate-900 transition-colors h-10 rounded-xl"
               {...register('email')}
             />
             {errors.email && (
-              <p className="text-xs text-destructive font-medium mt-1">{errors.email.message}</p>
+              <p className="text-xs text-destructive font-semibold mt-1">{errors.email.message}</p>
             )}
           </div>
 
-          <div className="space-y-1 relative">
+          <div className="space-y-1 relative text-left">
             <div className="flex justify-between items-center mb-1">
-              <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider" htmlFor="password">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider" htmlFor="password">
                 Password
               </label>
               
               <button
                 type="button"
                 onClick={generateAndSuggestPassword}
-                className="text-[10px] font-bold text-purple-400 hover:text-purple-300 transition-colors flex items-center gap-1 bg-purple-500/10 border border-purple-500/20 px-2 py-0.5 rounded-full"
+                className="text-[9px] font-bold text-indigo-600 hover:text-indigo-700 transition-colors flex items-center gap-1 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded-full"
               >
-                <Sparkles className="h-3 w-3" /> Suggest Strong
+                <Sparkles className="h-2.5 w-2.5" /> Suggest Strong
               </button>
             </div>
             
@@ -204,58 +208,58 @@ export const Register: React.FC = () => {
                 type={showPassword ? "text" : "password"}
                 placeholder="••••••••"
                 disabled={loading}
-                className="bg-black/30 border-zinc-800 focus:border-purple-500 transition-colors h-10 rounded-xl pr-10"
+                className="bg-white border-slate-200 focus:border-indigo-500 text-slate-900 transition-colors h-10 rounded-xl pr-10"
                 {...register('password')}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-2.5 text-zinc-500 hover:text-zinc-300"
+                className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600"
               >
                 {showPassword ? (
-                  <span className="text-[10px] font-bold">HIDE</span>
+                  <span className="text-[9px] font-bold uppercase">Hide</span>
                 ) : (
-                  <span className="text-[10px] font-bold">SHOW</span>
+                  <span className="text-[9px] font-bold uppercase">Show</span>
                 )}
               </button>
             </div>
 
             {/* Password strength real-time criteria checklist */}
             {passwordValue && (
-              <div className="bg-[#0b0c10] border border-white/5 p-3 rounded-xl space-y-2 mt-2 text-[11px] animate-fade-in">
-                <p className="font-semibold text-zinc-400">Password requirements:</p>
+              <div className="bg-slate-50 border border-slate-200 p-3 rounded-xl space-y-2 mt-2 text-[10px]">
+                <p className="font-bold text-slate-500">Password requirements:</p>
                 <div className="grid grid-cols-2 gap-2">
-                  <div className={`flex items-center space-x-1.5 ${checks.length ? 'text-emerald-400' : 'text-zinc-500'}`}>
+                  <div className={`flex items-center space-x-1.5 ${checks.length ? 'text-emerald-600 font-semibold' : 'text-slate-400'}`}>
                     {checks.length ? <CheckCircle className="h-3.5 w-3.5" /> : <XCircle className="h-3.5 w-3.5" />}
                     <span>8+ characters</span>
                   </div>
-                  <div className={`flex items-center space-x-1.5 ${checks.uppercase ? 'text-emerald-400' : 'text-zinc-500'}`}>
+                  <div className={`flex items-center space-x-1.5 ${checks.uppercase ? 'text-emerald-600 font-semibold' : 'text-slate-400'}`}>
                     {checks.uppercase ? <CheckCircle className="h-3.5 w-3.5" /> : <XCircle className="h-3.5 w-3.5" />}
                     <span>1+ uppercase</span>
                   </div>
-                  <div className={`flex items-center space-x-1.5 ${checks.lowercase ? 'text-emerald-400' : 'text-zinc-500'}`}>
+                  <div className={`flex items-center space-x-1.5 ${checks.lowercase ? 'text-emerald-600 font-semibold' : 'text-slate-400'}`}>
                     {checks.lowercase ? <CheckCircle className="h-3.5 w-3.5" /> : <XCircle className="h-3.5 w-3.5" />}
                     <span>1+ lowercase</span>
                   </div>
-                  <div className={`flex items-center space-x-1.5 ${checks.digit ? 'text-emerald-400' : 'text-zinc-500'}`}>
+                  <div className={`flex items-center space-x-1.5 ${checks.digit ? 'text-emerald-600 font-semibold' : 'text-slate-400'}`}>
                     {checks.digit ? <CheckCircle className="h-3.5 w-3.5" /> : <XCircle className="h-3.5 w-3.5" />}
                     <span>1+ number</span>
                   </div>
-                  <div className={`flex items-center space-x-1.5 ${checks.special ? 'text-emerald-400' : 'text-zinc-500'}`}>
+                  <div className={`flex items-center space-x-1.5 ${checks.special ? 'text-emerald-600 font-semibold' : 'text-slate-400'}`}>
                     {checks.special ? <CheckCircle className="h-3.5 w-3.5" /> : <XCircle className="h-3.5 w-3.5" />}
-                    <span>1+ special (@$!%*?&)</span>
+                    <span>1+ special symbol</span>
                   </div>
                 </div>
               </div>
             )}
             
             {errors.password && !passwordValue && (
-              <p className="text-xs text-destructive font-medium mt-1">{errors.password.message}</p>
+              <p className="text-xs text-destructive font-semibold mt-1">{errors.password.message}</p>
             )}
           </div>
 
-          <div className="space-y-1">
-            <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider" htmlFor="confirmPassword">
+          <div className="space-y-1 text-left">
+            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1" htmlFor="confirmPassword">
               Confirm Password
             </label>
             <Input
@@ -263,25 +267,30 @@ export const Register: React.FC = () => {
               type="password"
               placeholder="••••••••"
               disabled={loading}
-              className="bg-black/30 border-zinc-800 focus:border-purple-500 transition-colors h-10 rounded-xl"
+              className="bg-white border-slate-200 focus:border-indigo-500 text-slate-900 transition-colors h-10 rounded-xl"
               {...register('confirmPassword')}
             />
             {errors.confirmPassword && (
-              <p className="text-xs text-destructive font-medium mt-1">
+              <p className="text-xs text-destructive font-semibold mt-1">
                 {errors.confirmPassword.message}
               </p>
             )}
           </div>
 
-          <Button type="submit" className="w-full h-11 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white border-0 font-medium rounded-xl shadow-lg mt-4" loading={loading} disabled={passwordValue !== '' && !isPasswordStrong}>
+          <Button 
+            type="submit" 
+            className="w-full h-11 bg-slate-900 hover:bg-slate-800 text-white border-0 font-bold rounded-xl shadow-lg mt-4" 
+            loading={loading} 
+            disabled={passwordValue !== '' && !isPasswordStrong}
+          >
             Create Account
           </Button>
         </form>
 
         {/* Footer link */}
-        <p className="px-8 text-center text-xs text-zinc-400 border-t border-white/5 pt-4">
+        <p className="px-8 text-center text-xs text-slate-500 border-t border-slate-100 pt-4">
           Already have an account?{' '}
-          <Link to="/login" className="underline underline-offset-4 hover:text-purple-400 font-semibold transition-colors">
+          <Link to="/login" className="underline underline-offset-4 hover:text-indigo-600 font-bold transition-colors">
             Sign In
           </Link>
         </p>
