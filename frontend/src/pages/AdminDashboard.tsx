@@ -328,8 +328,14 @@ export const AdminDashboard: React.FC = () => {
                 <p className="text-xs text-slate-500 min-h-[40px] leading-relaxed">
                   {plan.description}
                 </p>
-                <div className="text-sm font-extrabold text-slate-900">
-                  ${(plan.price / 100).toFixed(2)} <span className="text-[10px] font-normal text-slate-400">/ {plan.billingCycle.toLowerCase()}</span>
+                <div className="space-y-1">
+                  <div className="text-xs font-bold text-slate-900">
+                    Monthly: ${(plan.price / 100).toFixed(2)}<span className="text-[10px] text-slate-400 font-normal"> / mo</span>
+                  </div>
+                  <div className="text-xs font-bold text-indigo-650">
+                    Annual: ${((plan.price * 12 * 0.85) / 100).toFixed(2)}<span className="text-[10px] text-slate-400 font-normal"> / yr</span>
+                    <span className="ml-1.5 text-[9px] bg-emerald-50 text-emerald-600 font-extrabold px-1 py-0.5 rounded border border-emerald-100">15% Off</span>
+                  </div>
                 </div>
               </div>
 
@@ -368,8 +374,8 @@ export const AdminDashboard: React.FC = () => {
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50/50 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
                   <th className="px-6 py-4">Plan Name</th>
-                  <th className="px-6 py-4">Price</th>
-                  <th className="px-6 py-4">Cycle</th>
+                  <th className="px-6 py-4">Monthly Price</th>
+                  <th className="px-6 py-4">Annual Price</th>
                   <th className="px-6 py-4">Active Subscribers</th>
                   <th className="px-6 py-4">Monthly Revenue</th>
                   <th className="px-6 py-4">Status</th>
@@ -380,7 +386,7 @@ export const AdminDashboard: React.FC = () => {
                   <tr key={ps.id} className="hover:bg-slate-50/50 transition-colors">
                     <td className="px-6 py-4 font-semibold text-slate-900">{ps.name}</td>
                     <td className="px-6 py-4 text-slate-600">${(ps.price / 100).toFixed(2)}</td>
-                    <td className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">{ps.billingCycle}</td>
+                    <td className="px-6 py-4 text-indigo-650 font-semibold">${((ps.price * 12 * 0.85) / 100).toFixed(2)}</td>
                     <td className="px-6 py-4 font-extrabold text-slate-900">{ps.activeSubscribers}</td>
                     <td className="px-6 py-4 text-emerald-600 font-extrabold">
                       ${(ps.monthlyRevenue / 100).toFixed(2)}
@@ -417,7 +423,8 @@ export const AdminDashboard: React.FC = () => {
                   <th className="px-6 py-4">User</th>
                   <th className="px-6 py-4">Email</th>
                   <th className="px-6 py-4">Plan</th>
-                  <th className="px-6 py-4">Billing Rate</th>
+                  <th className="px-6 py-4">Billing Rate Paid</th>
+                  <th className="px-6 py-4">Billing Cycle Chosen</th>
                   <th className="px-6 py-4">Billing End Date</th>
                   <th className="px-6 py-4">Status</th>
                 </tr>
@@ -425,6 +432,10 @@ export const AdminDashboard: React.FC = () => {
               <tbody className="divide-y divide-slate-200">
                 {subscriptions.map((s) => {
                   const clientUser = s.user as any;
+                  const currentRatePaid = s.pricePaid !== undefined && s.pricePaid !== null
+                    ? s.pricePaid
+                    : (s.billingCycle === 'ANNUAL' ? Math.round(s.plan?.price * 12 * 0.85) : s.plan?.price || 0);
+
                   return (
                     <tr key={s._id} className="hover:bg-slate-50/50 transition-colors">
                       <td className="px-6 py-4 font-semibold text-slate-900">{clientUser?.name || 'Unknown'}</td>
@@ -432,8 +443,13 @@ export const AdminDashboard: React.FC = () => {
                         {clientUser?.email || 'N/A'}
                       </td>
                       <td className="px-6 py-4 font-semibold text-slate-900">{s.plan?.name || 'N/A'}</td>
+                      <td className="px-6 py-4 text-slate-650 font-bold">
+                        ${(currentRatePaid / 100).toFixed(2)}
+                      </td>
                       <td className="px-6 py-4 text-slate-600">
-                        {s.plan ? `$${(s.plan.price / 100).toFixed(2)} / ${s.plan.billingCycle.toLowerCase()}` : 'N/A'}
+                        <Badge variant="secondary" className="text-[9px] font-bold uppercase">
+                          {s.billingCycle || 'MONTHLY'}
+                        </Badge>
                       </td>
                       <td className="px-6 py-4 text-slate-500">
                         {new Date(s.endDate).toLocaleDateString()}
@@ -489,9 +505,9 @@ export const AdminDashboard: React.FC = () => {
             />
           </div>
 
-          <div className="grid gap-4 grid-cols-2">
+          <div className="grid gap-4 grid-cols-2 items-start">
             <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Price (USD)</label>
+              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Monthly Price (USD)</label>
               <Input
                 type="number"
                 step="0.01"
@@ -502,24 +518,20 @@ export const AdminDashboard: React.FC = () => {
               />
             </div>
 
-            <div className="space-y-1.5 flex flex-col justify-end">
-              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Billing Cycle</label>
-              <div className="flex border border-slate-200 rounded-xl p-0.5 bg-slate-100">
-                {(['MONTHLY', 'ANNUAL'] as const).map((cycle) => (
-                  <button
-                    key={cycle}
-                    type="button"
-                    onClick={() => setPlanCycle(cycle)}
-                    className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
-                      planCycle === cycle
-                        ? 'bg-white text-slate-900 shadow-sm border border-slate-200'
-                        : 'text-slate-500 hover:text-slate-900'
-                    }`}
-                  >
-                    {cycle === 'MONTHLY' ? 'Monthly' : 'Annual'}
-                  </button>
-                ))}
-              </div>
+            <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+              <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-wider block">Auto-Derived Annual Rate</span>
+              {planPrice && !isNaN(parseFloat(planPrice)) ? (
+                <div>
+                  <p className="text-sm font-bold text-slate-800">
+                    ${(parseFloat(planPrice) * 12 * 0.85).toFixed(2)}/yr
+                  </p>
+                  <p className="text-[10px] text-emerald-600 font-bold">
+                    Includes 15% discount (${(parseFloat(planPrice) * 0.85).toFixed(2)}/mo equivalent)
+                  </p>
+                </div>
+              ) : (
+                <p className="text-[10px] text-slate-400 italic">Enter monthly price to view...</p>
+              )}
             </div>
           </div>
 

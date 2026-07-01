@@ -32,6 +32,22 @@ export const SuperAdminDashboard: React.FC = () => {
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [updatingRoleId, setUpdatingRoleId] = useState<string | null>(null);
 
+  // Sorting, filtering, pinning states
+  const [roleFilter, setRoleFilter] = useState<string>('ALL');
+  const [sortBy, setSortBy] = useState<string>('');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | ''>('');
+  const [pinnedUserIds, setPinnedUserIds] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('pinnedUserIds');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [pinNameColumn, setPinNameColumn] = useState<boolean>(false);
+  const [pinActionsColumn, setPinActionsColumn] = useState<boolean>(false);
+  const [subBillingCycle, setSubBillingCycle] = useState<'MONTHLY' | 'ANNUAL'>('MONTHLY');
+
   // All subscriptions list to trace user plan associations
   const [allSubscriptions, setAllSubscriptions] = useState<Subscription[]>([]);
 
@@ -72,7 +88,18 @@ export const SuperAdminDashboard: React.FC = () => {
   const fetchUsers = async () => {
     setLoadingUsers(true);
     try {
-      const usersData = await userService.getUsers(search, page, 10);
+      const activeRole = roleFilter === 'ALL' ? undefined : roleFilter;
+      const activeSortBy = sortBy || undefined;
+      const activeSortOrder = sortOrder || undefined;
+      
+      const usersData = await userService.getUsers(
+        search, 
+        page, 
+        10, 
+        activeRole, 
+        activeSortBy, 
+        activeSortOrder as any
+      );
       setUsers(usersData.data);
       setTotalPages(usersData.totalPages);
     } catch (err: any) {
@@ -103,17 +130,31 @@ export const SuperAdminDashboard: React.FC = () => {
     const initData = async () => {
       await Promise.all([
         fetchStatsAndLogs(),
-        fetchUsers(),
         fetchSubscriptionsAndPlans()
       ]);
     };
     initData();
   }, []);
 
-  // Fetch users when search query or page shifts
+  // Fetch users when search query, page, filter, or sorting shifts
   useEffect(() => {
     fetchUsers();
-  }, [search, page]);
+  }, [search, page, roleFilter, sortBy, sortOrder]);
+
+  const toggleRowPin = (userId: string) => {
+    setPinnedUserIds((prev) => {
+      const next = prev.includes(userId)
+        ? prev.filter((id) => id !== userId)
+        : [...prev, userId];
+      localStorage.setItem('pinnedUserIds', JSON.stringify(next));
+      return next;
+    });
+    toast({
+      title: pinnedUserIds.includes(userId) ? 'Row Unpinned' : 'Row Pinned',
+      description: 'Anchor row order has been updated.',
+      variant: 'success'
+    });
+  };
 
   const handleRoleChange = async (userId: string, newRole: 'USER' | 'ADMIN' | 'SUPER_ADMIN') => {
     if (userId === currentUser?._id) {
@@ -323,11 +364,16 @@ export const SuperAdminDashboard: React.FC = () => {
 
     setUpdatingSub(true);
     try {
+      const billingCycleToSend = subBillingCycle;
+      const monthsToSend = billingCycleToSend === 'ANNUAL' ? 12 : subOverrideMonths;
+
       await userService.updateUserSubscription(
         subSelectedUser._id,
         subSelectedPlanId,
-        subOverrideMonths,
-        'subscribe'
+        monthsToSend,
+        'subscribe',
+        undefined,
+        billingCycleToSend
       );
       toast({
         title: 'Subscription Added',
@@ -565,134 +611,288 @@ export const SuperAdminDashboard: React.FC = () => {
       {/* Users management tab */}
       {activeTab === 'users' && (
         <div className="space-y-6">
-          {/* Search bar */}
-          <div className="flex justify-between items-center bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
-            <div className="relative w-full max-w-xs">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Search users by name or email..."
-                value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
-                  setPage(1);
-                }}
-                className="pl-9 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-indigo-500"
-              />
+          {/* Filters, search and pinning controls */}
+          <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+            <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+              <div className="relative min-w-[240px]">
+                <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Search by name or email..."
+                  value={search}
+                  onChange={(e) => {
+                    setSearch(e.target.value);
+                    setPage(1);
+                  }}
+                  className="pl-9 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-indigo-500"
+                />
+              </div>
+
+              {/* Role filter dropdown */}
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Role</span>
+                <select
+                  value={roleFilter}
+                  onChange={(e) => {
+                    setRoleFilter(e.target.value);
+                    setPage(1);
+                  }}
+                  className="h-10 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-indigo-500"
+                >
+                  <option value="ALL">All Roles</option>
+                  <option value="USER">User Only</option>
+                  <option value="ADMIN">Admin Only</option>
+                  <option value="SUPER_ADMIN">Super Admin Only</option>
+                </select>
+              </div>
             </div>
-            <div className="text-xs text-slate-500 font-semibold">
-              Showing page {page} of {totalPages}
+
+            {/* Column Pinning configuration panel */}
+            <div className="flex items-center gap-3 w-full md:w-auto justify-end">
+              <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider">Pin Columns:</span>
+              <button
+                onClick={() => setPinNameColumn(!pinNameColumn)}
+                className={`px-3 py-1.5 text-xs font-bold rounded-xl border transition-all ${
+                  pinNameColumn
+                    ? 'bg-indigo-50 border-indigo-200 text-indigo-700 shadow-sm'
+                    : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                {pinNameColumn ? '📌 Name Pinned' : 'Pin Name (Left)'}
+              </button>
+              <button
+                onClick={() => setPinActionsColumn(!pinActionsColumn)}
+                className={`px-3 py-1.5 text-xs font-bold rounded-xl border transition-all ${
+                  pinActionsColumn
+                    ? 'bg-indigo-50 border-indigo-200 text-indigo-700 shadow-sm'
+                    : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                {pinActionsColumn ? '📌 Actions Pinned' : 'Pin Actions (Right)'}
+              </button>
             </div>
           </div>
 
           {/* User role table */}
           {loadingUsers ? (
-            <TableSkeleton rows={5} cols={4} />
+            <TableSkeleton rows={5} cols={5} />
           ) : users.length === 0 ? (
             <div className="border border-dashed border-slate-200 rounded-2xl p-12 text-center text-sm text-slate-500 bg-white shadow-sm">
               No users found matching search criteria.
             </div>
           ) : (
-            <div className="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm">
-              <table className="w-full text-left text-sm border-collapse">
+            <div className="border border-slate-200 rounded-2xl overflow-x-auto bg-white shadow-sm relative">
+              <table className="w-full text-left text-sm border-collapse min-w-[850px]">
                 <thead>
-                  <tr className="border-b border-slate-200 bg-slate-50/50 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                    <th className="px-6 py-4">User Name</th>
-                    <th className="px-6 py-4">Email</th>
-                    <th className="px-6 py-4">Role Status</th>
+                  <tr className="border-b border-slate-200 bg-slate-50/50 text-[10px] font-bold text-slate-500 uppercase tracking-wider select-none">
+                    <th className="px-3 py-4 w-12 text-center">Pin</th>
+                    <th 
+                      onClick={() => {
+                        if (sortBy === 'name') {
+                          setSortOrder(sortOrder === 'asc' ? 'desc' : sortOrder === 'desc' ? '' : 'asc');
+                          if (sortOrder === 'desc') setSortBy('');
+                        } else {
+                          setSortBy('name');
+                          setSortOrder('asc');
+                        }
+                        setPage(1);
+                      }}
+                      className={`px-6 py-4 cursor-pointer hover:bg-slate-100/60 transition-colors ${
+                        pinNameColumn 
+                          ? 'sticky left-0 bg-slate-50/95 z-20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] border-r border-slate-200/60' 
+                          : ''
+                      }`}
+                    >
+                      <div className="flex items-center gap-1">
+                        User Name {sortBy === 'name' ? (sortOrder === 'asc' ? '▲' : '▼') : '↕'}
+                      </div>
+                    </th>
+                    <th 
+                      onClick={() => {
+                        if (sortBy === 'email') {
+                          setSortOrder(sortOrder === 'asc' ? 'desc' : sortOrder === 'desc' ? '' : 'asc');
+                          if (sortOrder === 'desc') setSortBy('');
+                        } else {
+                          setSortBy('email');
+                          setSortOrder('asc');
+                        }
+                        setPage(1);
+                      }}
+                      className="px-6 py-4 cursor-pointer hover:bg-slate-100/60 transition-colors"
+                    >
+                      <div className="flex items-center gap-1">
+                        Email Address {sortBy === 'email' ? (sortOrder === 'asc' ? '▲' : '▼') : '↕'}
+                      </div>
+                    </th>
+                    <th 
+                      onClick={() => {
+                        if (sortBy === 'role') {
+                          setSortOrder(sortOrder === 'asc' ? 'desc' : sortOrder === 'desc' ? '' : 'asc');
+                          if (sortOrder === 'desc') setSortBy('');
+                        } else {
+                          setSortBy('role');
+                          setSortOrder('asc');
+                        }
+                        setPage(1);
+                      }}
+                      className="px-6 py-4 cursor-pointer hover:bg-slate-100/60 transition-colors"
+                    >
+                      <div className="flex items-center gap-1">
+                        Role Status {sortBy === 'role' ? (sortOrder === 'asc' ? '▲' : '▼') : '↕'}
+                      </div>
+                    </th>
                     <th className="px-6 py-4">Active Subscription</th>
-                    <th className="px-6 py-4 text-right">Actions</th>
+                    <th 
+                      className={`px-6 py-4 text-right ${
+                        pinActionsColumn 
+                          ? 'sticky right-0 bg-slate-50/95 z-20 shadow-[-2px_0_5px_-2px_rgba(0,0,0,0.1)] border-l border-slate-200/60' 
+                          : ''
+                      }`}
+                    >
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
-                  {users.map((u, idx) => {
-                    const isSelf = u._id === currentUser?._id;
-                    const userActiveSubs = allSubscriptions.filter(
-                      (s) => (s.user as any)?._id === u._id && s.status === 'ACTIVE'
-                    );
+                  {(() => {
+                    const pinned = users.filter((u) => pinnedUserIds.includes(u._id));
+                    const unpinned = users.filter((u) => !pinnedUserIds.includes(u._id));
+                    const reordered = [...pinned, ...unpinned];
 
-                    return (
-                      <motion.tr
-                        key={u._id}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: idx * 0.04 }}
-                        className="hover:bg-slate-50/50 transition-colors"
-                      >
-                        <td className="px-6 py-4 font-semibold text-slate-900">
-                          {u.name} {isSelf && <span className="text-[10px] text-slate-400 font-normal ml-1">(You)</span>}
-                        </td>
-                        <td className="px-6 py-4 text-slate-500 truncate max-w-[200px]">{u.email}</td>
-                        <td className="px-6 py-4">
-                          <Badge
-                            variant={
-                              u.role === 'SUPER_ADMIN'
-                                ? 'success'
-                                : u.role === 'ADMIN'
-                                ? 'default'
-                                : 'secondary'
-                            }
-                            className="text-[9px] font-bold"
+                    return reordered.map((u, idx) => {
+                      const isSelf = u._id === currentUser?._id;
+                      const isPinned = pinnedUserIds.includes(u._id);
+                      const userActiveSubs = allSubscriptions.filter(
+                        (s) => (s.user as any)?._id === u._id && s.status === 'ACTIVE'
+                      );
+
+                      return (
+                        <motion.tr
+                          key={u._id}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: idx * 0.03 }}
+                          className={`hover:bg-slate-50/50 transition-colors ${
+                            isPinned ? 'bg-amber-50/30 hover:bg-amber-50/40 border-l-2 border-l-amber-500' : ''
+                          }`}
+                        >
+                          {/* Row pin column cell */}
+                          <td className="px-3 py-4 text-center">
+                            <button
+                              onClick={() => toggleRowPin(u._id)}
+                              className={`p-1.5 rounded-lg transition-colors ${
+                                isPinned
+                                  ? 'text-amber-500 hover:text-amber-600 bg-amber-50'
+                                  : 'text-slate-300 hover:text-slate-500 hover:bg-slate-50'
+                              }`}
+                              title={isPinned ? 'Unpin User' : 'Pin User to Top'}
+                            >
+                              📌
+                            </button>
+                          </td>
+
+                          <td 
+                            className={`px-6 py-4 font-semibold text-slate-900 ${
+                              pinNameColumn 
+                                ? `sticky left-0 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] border-r border-slate-200/60 ${
+                                    isPinned ? 'bg-[#fef9eb]' : 'bg-white'
+                                  }` 
+                                : ''
+                            }`}
                           >
-                            {u.role}
-                          </Badge>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex flex-wrap gap-1.5 max-w-[200px]">
-                            {userActiveSubs.length > 0 ? (
-                              userActiveSubs.map((sub) => (
-                                <Badge
-                                  key={sub._id}
-                                  variant="outline"
-                                  className="text-[10px] font-bold border-emerald-250 bg-emerald-50 text-emerald-700"
-                                >
-                                  {sub.plan?.name || 'Active'}
-                                </Badge>
-                              ))
-                            ) : (
-                              <span className="text-xs text-slate-400">None</span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          <div className="flex items-center justify-end space-x-3">
-                            <select
-                              disabled={isSelf || updatingRoleId === u._id}
-                              value={u.role}
-                              onChange={(e) =>
-                                handleRoleChange(u._id, e.target.value as any)
+                            <div className="flex items-center gap-1.5">
+                              {u.name} 
+                              {isSelf && <span className="text-[10px] text-slate-400 font-normal">(You)</span>}
+                              {isPinned && (
+                                <span className="text-[9px] bg-amber-100 text-amber-800 font-extrabold px-1 rounded">PINNED</span>
+                              )}
+                            </div>
+                          </td>
+                          
+                          <td className="px-6 py-4 text-slate-500 truncate max-w-[200px]">{u.email}</td>
+                          
+                          <td className="px-6 py-4">
+                            <Badge
+                              variant={
+                                u.role === 'SUPER_ADMIN'
+                                  ? 'success'
+                                  : u.role === 'ADMIN'
+                                  ? 'default'
+                                  : 'secondary'
                               }
-                              className="h-8 rounded-xl border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-700 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-indigo-500 disabled:opacity-50"
+                              className="text-[9px] font-bold"
                             >
-                              <option value="USER">User</option>
-                              <option value="ADMIN">Admin</option>
-                              <option value="SUPER_ADMIN">Super Admin</option>
-                            </select>
+                              {u.role}
+                            </Badge>
+                          </td>
+                          
+                          <td className="px-6 py-4">
+                            <div className="flex flex-wrap gap-1.5 max-w-[200px]">
+                              {userActiveSubs.length > 0 ? (
+                                userActiveSubs.map((sub) => (
+                                  <Badge
+                                    key={sub._id}
+                                    variant="outline"
+                                    className="text-[10px] font-bold border-emerald-250 bg-emerald-50 text-emerald-700 flex items-center gap-1"
+                                  >
+                                    {sub.plan?.name || 'Active'}
+                                    <span className="text-[9px] text-slate-400">({sub.billingCycle?.toLowerCase() || 'mo'})</span>
+                                  </Badge>
+                                ))
+                              ) : (
+                                <span className="text-xs text-slate-400">None</span>
+                              )}
+                            </div>
+                          </td>
+                          
+                          <td 
+                            className={`px-6 py-4 text-right ${
+                              pinActionsColumn 
+                                ? `sticky right-0 z-10 shadow-[-2px_0_5px_-2px_rgba(0,0,0,0.1)] border-l border-slate-200/60 ${
+                                    isPinned ? 'bg-[#fef9eb]' : 'bg-white'
+                                  }` 
+                                : ''
+                            }`}
+                          >
+                            <div className="flex items-center justify-end space-x-3">
+                              <select
+                                disabled={isSelf || updatingRoleId === u._id}
+                                value={u.role}
+                                onChange={(e) =>
+                                  handleRoleChange(u._id, e.target.value as any)
+                                }
+                                className="h-8 rounded-xl border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-700 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-indigo-500 disabled:opacity-50"
+                              >
+                                <option value="USER">User</option>
+                                <option value="ADMIN">Admin</option>
+                                <option value="SUPER_ADMIN">Super Admin</option>
+                              </select>
 
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-8 text-xs gap-1.5 border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl"
-                              onClick={() => handleOpenManageSub(u)}
-                            >
-                              <CreditCard className="h-3.5 w-3.5" /> Modify Plan
-                            </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 text-xs gap-1.5 border-slate-200 hover:bg-slate-50 text-slate-700 bg-white rounded-xl"
+                                onClick={() => handleOpenManageSub(u)}
+                              >
+                                <CreditCard className="h-3.5 w-3.5" /> Modify Plan
+                              </Button>
 
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              disabled={isSelf}
-                              onClick={() => handleDeleteUser(u._id)}
-                              className="text-red-650 hover:bg-red-50 hover:text-red-700 h-8 w-8 rounded-xl"
-                              aria-label="Delete user"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </td>
-                      </motion.tr>
-                    );
-                  })}
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                disabled={isSelf}
+                                onClick={() => handleDeleteUser(u._id)}
+                                className="text-red-650 hover:bg-red-50 hover:text-red-700 h-8 w-8 rounded-xl"
+                                aria-label="Delete user"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </td>
+                        </motion.tr>
+                      );
+                    });
+                  })()}
                 </tbody>
               </table>
             </div>
@@ -953,29 +1153,36 @@ export const SuperAdminDashboard: React.FC = () => {
                 </select>
               </div>
 
-              {/* Customizable Duration (Monthly only) */}
-              {(() => {
-                const selectedPlanObj = availablePlans.find((p) => p._id === subSelectedPlanId);
-                const isMonthlyPlan = selectedPlanObj?.billingCycle === 'MONTHLY';
-                if (!isMonthlyPlan) return null;
+              {/* Billing Cycle Selection */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Billing Cycle</label>
+                <select
+                  value={subBillingCycle}
+                  onChange={(e) => setSubBillingCycle(e.target.value as any)}
+                  className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-indigo-500"
+                >
+                  <option value="MONTHLY">Monthly Billing Cycle</option>
+                  <option value="ANNUAL">Annual Billing Cycle (15% Automated Discount Applied)</option>
+                </select>
+              </div>
 
-                return (
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Duration (months)</label>
-                    <select
-                      value={subOverrideMonths}
-                      onChange={(e) => setSubOverrideMonths(Number(e.target.value))}
-                      className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-indigo-500"
-                    >
-                      {[1, 2, 3, 6, 12].map((m) => (
-                        <option key={m} value={m}>
-                          {m} {m === 1 ? 'Month' : 'Months'}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                );
-              })()}
+              {/* Customizable Duration (Monthly only) */}
+              {subBillingCycle === 'MONTHLY' && (
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Duration (months)</label>
+                  <select
+                    value={subOverrideMonths}
+                    onChange={(e) => setSubOverrideMonths(Number(e.target.value))}
+                    className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-indigo-500"
+                  >
+                    {[1, 2, 3, 6, 12].map((m) => (
+                      <option key={m} value={m}>
+                        {m} {m === 1 ? 'Month' : 'Months'}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               <div className="flex justify-end space-x-2 pt-2">
                 <Button type="button" variant="outline" onClick={() => setIsManageSubOpen(false)} className="border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl">

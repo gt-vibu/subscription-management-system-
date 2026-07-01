@@ -28,6 +28,8 @@ export interface Subscription {
   user: string | User;
   plan: Plan;
   status: 'ACTIVE' | 'CANCELLED' | 'EXPIRED';
+  billingCycle?: 'MONTHLY' | 'ANNUAL';
+  pricePaid?: number;
   startDate: string;
   endDate: string;
   createdAt: string;

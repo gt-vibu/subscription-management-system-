@@ -188,20 +188,30 @@ export const UserDashboard: React.FC = () => {
                   </div>
 
                   <div className="grid grid-cols-2 gap-3 text-xs bg-slate-50 border border-slate-100 rounded-xl p-3">
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-2 col-span-2">
                       <CreditCard className="h-4 w-4 text-slate-400" />
                       <div>
-                        <p className="text-[9px] text-slate-400 font-bold uppercase">Price</p>
+                        <p className="text-[9px] text-slate-400 font-bold uppercase">Billing Details</p>
                         <p className="font-bold text-slate-900 text-xs">
-                          ${sub.plan ? (sub.plan.price / 100).toFixed(2) : '0.00'}
-                          <span className="text-slate-400 font-normal">/{sub.plan?.billingCycle === 'ANNUAL' ? 'yr' : 'mo'}</span>
+                          {sub.billingCycle === 'ANNUAL' ? (
+                            <>
+                              ${(sub.pricePaid ? sub.pricePaid / 100 : (sub.plan?.price * 12 * 0.85) / 100).toFixed(2)}/yr
+                              <span className="ml-1.5 text-[9px] bg-emerald-50 text-emerald-600 font-extrabold px-1 py-0.5 rounded border border-emerald-100">Annual</span>
+                            </>
+                          ) : (
+                            <>
+                              ${(sub.pricePaid ? sub.pricePaid / 100 : sub.plan?.price / 100).toFixed(2)}/mo
+                              <span className="ml-1.5 text-[9px] bg-indigo-50 text-indigo-600 font-bold px-1 py-0.5 rounded border border-indigo-100">Monthly</span>
+                            </>
+                          )}
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-2">
+
+                    <div className="flex items-center space-x-2 col-span-2 border-t border-slate-100 pt-2">
                       <Calendar className="h-4 w-4 text-slate-400" />
                       <div>
-                        <p className="text-[9px] text-slate-400 font-bold uppercase">Renews</p>
+                        <p className="text-[9px] text-slate-400 font-bold uppercase">Renews / Ends On</p>
                         <p className="font-bold text-slate-900 text-xs">{new Date(sub.endDate).toLocaleDateString()}</p>
                       </div>
                     </div>

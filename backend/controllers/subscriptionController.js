@@ -19,12 +19,17 @@ const getMySubscription = async (req, res, next) => {
  */
 const subscribeToPlan = async (req, res, next) => {
   try {
-    const { planId, months } = req.body;
+    const { planId, months, billingCycle } = req.body;
     if (!planId) {
       return next(new AppError('Please provide a planId', 400));
     }
 
-    const sub = await subscriptionService.subscribe(req.user._id, planId, months ? Number(months) : undefined);
+    const sub = await subscriptionService.subscribe(
+      req.user._id, 
+      planId, 
+      billingCycle, 
+      months ? Number(months) : undefined
+    );
     return sendResponse(res, 201, sub, 'Subscription activated successfully');
   } catch (error) {
     next(error);
@@ -36,7 +41,7 @@ const subscribeToPlan = async (req, res, next) => {
  */
 const changePlan = async (req, res, next) => {
   try {
-    const { planId, subscriptionId, months } = req.body;
+    const { planId, subscriptionId, months, billingCycle } = req.body;
     if (!planId) {
       return next(new AppError('Please provide a planId', 400));
     }
@@ -48,6 +53,7 @@ const changePlan = async (req, res, next) => {
       req.user._id,
       subscriptionId,
       planId,
+      billingCycle,
       months ? Number(months) : undefined
     );
     const message = result.type === 'upgrade' 

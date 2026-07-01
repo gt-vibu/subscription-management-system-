@@ -11,9 +11,16 @@ export interface UsersListResponse {
 }
 
 export const userService = {
-  async getUsers(search: string = '', page: number = 1, limit: number = 10): Promise<UsersListResponse> {
+  async getUsers(
+    search: string = '',
+    page: number = 1,
+    limit: number = 10,
+    role?: string,
+    sortBy?: string,
+    sortOrder?: 'asc' | 'desc'
+  ): Promise<UsersListResponse> {
     const response = await client.get('/users', {
-      params: { search, page, limit }
+      params: { search, page, limit, role, sortBy, sortOrder }
     });
     return response.data;
   },
@@ -37,13 +44,15 @@ export const userService = {
     planId: string | null,
     months?: number,
     action?: 'subscribe' | 'cancel' | 'change',
-    subscriptionId?: string
+    subscriptionId?: string,
+    billingCycle?: 'MONTHLY' | 'ANNUAL'
   ): Promise<any> {
     const response = await client.patch(`/users/${userId}/subscription`, {
       planId,
       months,
       action,
-      subscriptionId
+      subscriptionId,
+      billingCycle
     });
     return response.data.data;
   }

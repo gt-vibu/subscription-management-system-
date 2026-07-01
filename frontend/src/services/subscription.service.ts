@@ -12,13 +12,13 @@ export const subscriptionService = {
     return response.data.data;
   },
 
-  async subscribe(planId: string, months?: number): Promise<Subscription> {
-    const response = await client.post('/subscriptions/subscribe', { planId, months });
+  async subscribe(planId: string, billingCycle?: 'MONTHLY' | 'ANNUAL', months?: number): Promise<Subscription> {
+    const response = await client.post('/subscriptions/subscribe', { planId, billingCycle, months });
     return response.data.data;
   },
 
-  async changePlan(subscriptionId: string, planId: string, months?: number): Promise<Subscription> {
-    const response = await client.post('/subscriptions/change', { subscriptionId, planId, months });
+  async changePlan(subscriptionId: string, planId: string, billingCycle?: 'MONTHLY' | 'ANNUAL', months?: number): Promise<Subscription> {
+    const response = await client.post('/subscriptions/change', { subscriptionId, planId, billingCycle, months });
     return response.data.data;
   },
 

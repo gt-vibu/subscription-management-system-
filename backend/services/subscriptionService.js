@@ -52,7 +52,10 @@ const getUserSubscriptionDetails = async (userId) => {
 /**
  * Subscribe a user to a plan (allows multiple active subscriptions on different plans)
  */
-const subscribe = async (userId, planId, months = 1) => {
+const subscribe = async (userId, planId, billingCycle = 'MONTHLY', months = 1) => {
+  // Normalize billingCycle
+  const cycle = (billingCycle || 'MONTHLY').toUpperCase();
+
   // Check if user already has an active subscription on the SAME plan
   const existingOnSamePlan = await Subscription.findOne({
     user: userId,
@@ -74,12 +77,23 @@ const subscribe = async (userId, planId, months = 1) => {
   }
 
   const startDate = new Date();
-  const endDate = calculateEndDate(plan.billingCycle, startDate, months);
+  let endDate;
+  let pricePaid;
+
+  if (cycle === 'ANNUAL') {
+    pricePaid = Math.round(plan.price * 12 * 0.85); // 15% discount
+    endDate = calculateEndDate('ANNUAL', startDate);
+  } else {
+    pricePaid = plan.price * months;
+    endDate = calculateEndDate('MONTHLY', startDate, months);
+  }
 
   return await Subscription.create({
     user: userId,
     plan: planId,
     status: 'ACTIVE',
+    billingCycle: cycle,
+    pricePaid,
     startDate,
     endDate
   });
@@ -88,7 +102,9 @@ const subscribe = async (userId, planId, months = 1) => {
 /**
  * Change a specific active subscription to a new plan
  */
-const changeSubscriptionPlan = async (userId, subscriptionId, newPlanId, months = 1) => {
+const changeSubscriptionPlan = async (userId, subscriptionId, newPlanId, billingCycle = 'MONTHLY', months = 1) => {
+  const cycle = (billingCycle || 'MONTHLY').toUpperCase();
+
   const activeSub = await Subscription.findOne({
     _id: subscriptionId,
     user: userId,
@@ -132,12 +148,23 @@ const changeSubscriptionPlan = async (userId, subscriptionId, newPlanId, months 
   await activeSub.save();
 
   const startDate = new Date();
-  const endDate = calculateEndDate(newPlan.billingCycle, startDate, months);
+  let endDate;
+  let pricePaid;
+
+  if (cycle === 'ANNUAL') {
+    pricePaid = Math.round(newPlan.price * 12 * 0.85); // 15% discount
+    endDate = calculateEndDate('ANNUAL', startDate);
+  } else {
+    pricePaid = newPlan.price * months;
+    endDate = calculateEndDate('MONTHLY', startDate, months);
+  }
 
   const newSub = await Subscription.create({
     user: userId,
     plan: newPlanId,
     status: 'ACTIVE',
+    billingCycle: cycle,
+    pricePaid,
     startDate,
     endDate
   });

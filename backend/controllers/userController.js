@@ -10,8 +10,11 @@ const getUsersList = async (req, res, next) => {
     const searchQuery = req.query.search || '';
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
+    const role = req.query.role || '';
+    const sortBy = req.query.sortBy || '';
+    const sortOrder = req.query.sortOrder || 'asc';
 
-    const { users, total } = await userService.getUsers(searchQuery, page, limit);
+    const { users, total } = await userService.getUsers(searchQuery, page, limit, role, sortBy, sortOrder);
 
     return sendPaginatedResponse(res, 200, users, page, limit, total);
   } catch (error) {
@@ -90,14 +93,15 @@ const createUser = async (req, res, next) => {
  */
 const updateUserSubscription = async (req, res, next) => {
   try {
-    const { planId, months, action, subscriptionId } = req.body;
+    const { planId, months, action, subscriptionId, billingCycle } = req.body;
     const targetUserId = req.params.id;
 
     const result = await userService.changeUserSubscription(targetUserId, {
       action,
       planId,
       subscriptionId,
-      months: months ? Number(months) : undefined
+      months: months ? Number(months) : undefined,
+      billingCycle
     });
 
     return sendResponse(res, 200, result, 'User subscription successfully modified');

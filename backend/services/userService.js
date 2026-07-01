@@ -5,10 +5,9 @@ const subscriptionService = require('./subscriptionService');
 /**
  * Get paginated and searchable list of users (Super Admin only)
  */
-const getUsers = async (searchQuery = '', page = 1, limit = 10) => {
+const getUsers = async (searchQuery = '', page = 1, limit = 10, role = '', sortBy = '', sortOrder = 'asc') => {
   const skip = (page - 1) * limit;
 
-  // Optimize search: use standard regex match
   const filter = {};
   if (searchQuery) {
     filter.$or = [
@@ -17,10 +16,19 @@ const getUsers = async (searchQuery = '', page = 1, limit = 10) => {
     ];
   }
 
+  if (role && role !== 'ALL') {
+    filter.role = role.toUpperCase();
+  }
+
+  let sortOptions = { role: 1, name: 1 };
+  if (sortBy) {
+    sortOptions = { [sortBy]: sortOrder === 'desc' ? -1 : 1 };
+  }
+
   const [users, total] = await Promise.all([
     User.find(filter)
       .select('-password')
-      .sort({ role: 1, name: 1 })
+      .sort(sortOptions)
       .skip(skip)
       .limit(limit),
     User.countDocuments(filter)
@@ -111,14 +119,14 @@ const changeUserSubscription = async (targetUserId, planIdOrData, months = 1) =>
 
   // Handle case where planIdOrData is an object (new behavior)
   if (planIdOrData && typeof planIdOrData === 'object') {
-    const { action, planId, subscriptionId, months: optMonths } = planIdOrData;
+    const { action, planId, subscriptionId, months: optMonths, billingCycle } = planIdOrData;
     const finalMonths = optMonths ? Number(optMonths) : months;
 
     if (action === 'subscribe') {
       if (!planId) {
         throw new AppError('Plan ID is required to subscribe.', 400);
       }
-      const sub = await subscriptionService.subscribe(targetUserId, planId, finalMonths);
+      const sub = await subscriptionService.subscribe(targetUserId, planId, billingCycle, finalMonths);
       return { status: 'CREATED', subscription: sub };
     }
 
@@ -134,7 +142,7 @@ const changeUserSubscription = async (targetUserId, planIdOrData, months = 1) =>
       if (!subscriptionId || !planId) {
         throw new AppError('Subscription ID and Plan ID are required to change subscription.', 400);
       }
-      const result = await subscriptionService.changeSubscriptionPlan(targetUserId, subscriptionId, planId, finalMonths);
+      const result = await subscriptionService.changeSubscriptionPlan(targetUserId, subscriptionId, planId, billingCycle, finalMonths);
       return { status: 'UPDATED', subscription: result.subscription };
     }
   }
