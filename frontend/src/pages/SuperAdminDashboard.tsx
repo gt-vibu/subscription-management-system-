@@ -11,9 +11,10 @@ import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { Dialog } from '../components/ui/Dialog';
 import { TableSkeleton, CardSkeleton } from '../components/ui/Skeletons';
-import { Shield, Users, DollarSign, Database, Search, ArrowLeft, ArrowRight, Trash2, UserPlus, CreditCard, Sparkles, CheckCircle, XCircle } from 'lucide-react';
+import { Shield, Users, DollarSign, Database, Search, ArrowLeft, ArrowRight, Trash2, UserPlus, CreditCard, Sparkles, CheckCircle, XCircle, ChevronDown } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Cell } from 'recharts';
+import SystemCore3D from '../components/ui/SystemCore3D';
 
 export const SuperAdminDashboard: React.FC = () => {
   const { user: currentUser } = useAuth();
@@ -47,6 +48,7 @@ export const SuperAdminDashboard: React.FC = () => {
   const [pinNameColumn, setPinNameColumn] = useState<boolean>(false);
   const [pinActionsColumn, setPinActionsColumn] = useState<boolean>(false);
   const [subBillingCycle, setSubBillingCycle] = useState<'MONTHLY' | 'ANNUAL'>('MONTHLY');
+  const [openHeaderMenu, setOpenHeaderMenu] = useState<string | null>(null);
 
   // All subscriptions list to trace user plan associations
   const [allSubscriptions, setAllSubscriptions] = useState<Subscription[]>([]);
@@ -140,6 +142,17 @@ export const SuperAdminDashboard: React.FC = () => {
   useEffect(() => {
     fetchUsers();
   }, [search, page, roleFilter, sortBy, sortOrder]);
+
+  // Click outside to close column action menus
+  useEffect(() => {
+    const handleOutsideClick = () => {
+      setOpenHeaderMenu(null);
+    };
+    window.addEventListener('click', handleOutsideClick);
+    return () => {
+      window.removeEventListener('click', handleOutsideClick);
+    };
+  }, []);
 
   const toggleRowPin = (userId: string) => {
     setPinnedUserIds((prev) => {
@@ -574,30 +587,35 @@ export const SuperAdminDashboard: React.FC = () => {
               </div>
             </div>
 
-            {/* Telemetry card */}
-            <div className="glass-card p-6 rounded-2xl border border-slate-200 bg-white shadow-sm">
-              <h2 className="text-sm font-extrabold mb-4 flex items-center gap-2 text-slate-900 uppercase tracking-wider">
-                <Database className="h-4 w-4 text-emerald-600" /> System Telemetry
-              </h2>
-              <div className="space-y-4 text-xs">
-                <div className="flex justify-between items-center py-1">
-                  <span className="text-slate-500">Database Status</span>
-                  <div className="flex items-center gap-1.5 font-bold text-emerald-600">
-                    <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                    CONNECTED
+            <div className="space-y-6">
+              {/* 3D System Core Card */}
+              <SystemCore3D />
+
+              {/* Telemetry card */}
+              <div className="glass-card p-6 rounded-2xl border border-slate-200 bg-white shadow-sm">
+                <h2 className="text-sm font-extrabold mb-4 flex items-center gap-2 text-slate-900 uppercase tracking-wider">
+                  <Database className="h-4 w-4 text-emerald-600" /> System Telemetry
+                </h2>
+                <div className="space-y-4 text-xs">
+                  <div className="flex justify-between items-center py-1">
+                    <span className="text-slate-500">Database Status</span>
+                    <div className="flex items-center gap-1.5 font-bold text-emerald-600">
+                      <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                      CONNECTED
+                    </div>
                   </div>
-                </div>
-                <div className="flex justify-between items-center py-1">
-                  <span className="text-slate-500">API Server Status</span>
-                  <span className="font-bold text-slate-900 uppercase">ONLINE</span>
-                </div>
-                <div className="flex justify-between items-center py-1">
-                  <span className="text-slate-500">Network Latency</span>
-                  <span className="font-bold text-slate-900">14ms</span>
-                </div>
-                <div className="flex justify-between items-center py-1">
-                  <span className="text-slate-500">Platform Uptime</span>
-                  <span className="font-bold text-emerald-600">99.98%</span>
+                  <div className="flex justify-between items-center py-1">
+                    <span className="text-slate-500">API Server Status</span>
+                    <span className="font-bold text-slate-900 uppercase">ONLINE</span>
+                  </div>
+                  <div className="flex justify-between items-center py-1">
+                    <span className="text-slate-500">Network Latency</span>
+                    <span className="font-bold text-slate-900">14ms</span>
+                  </div>
+                  <div className="flex justify-between items-center py-1">
+                    <span className="text-slate-500">Platform Uptime</span>
+                    <span className="font-bold text-emerald-600">99.98%</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -687,69 +705,305 @@ export const SuperAdminDashboard: React.FC = () => {
                   <tr className="border-b border-slate-200 bg-slate-50/50 text-[10px] font-bold text-slate-500 uppercase tracking-wider select-none">
                     <th className="px-3 py-4 w-12 text-center">Pin</th>
                     <th 
-                      onClick={() => {
-                        if (sortBy === 'name') {
-                          setSortOrder(sortOrder === 'asc' ? 'desc' : sortOrder === 'desc' ? '' : 'asc');
-                          if (sortOrder === 'desc') setSortBy('');
-                        } else {
-                          setSortBy('name');
-                          setSortOrder('asc');
-                        }
-                        setPage(1);
-                      }}
-                      className={`px-6 py-4 cursor-pointer hover:bg-slate-100/60 transition-colors ${
+                      className={`px-6 py-4 relative transition-colors ${
                         pinNameColumn 
                           ? 'sticky left-0 bg-slate-50/95 z-20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] border-r border-slate-200/60' 
                           : ''
                       }`}
                     >
-                      <div className="flex items-center gap-1">
-                        User Name {sortBy === 'name' ? (sortOrder === 'asc' ? '▲' : '▼') : '↕'}
+                      <div className="flex items-center justify-between gap-1">
+                        <span 
+                          onClick={() => {
+                            if (sortBy === 'name') {
+                              setSortOrder(sortOrder === 'asc' ? 'desc' : sortOrder === 'desc' ? '' : 'asc');
+                              if (sortOrder === 'desc') setSortBy('');
+                            } else {
+                              setSortBy('name');
+                              setSortOrder('asc');
+                            }
+                            setPage(1);
+                          }}
+                          className="cursor-pointer hover:text-slate-800 flex items-center gap-1 select-none"
+                        >
+                          User Name {sortBy === 'name' ? (sortOrder === 'asc' ? '▲' : '▼') : '↕'}
+                        </span>
+                        
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenHeaderMenu(openHeaderMenu === 'name' ? null : 'name');
+                          }}
+                          className="p-1 rounded hover:bg-slate-200/50 text-slate-400 hover:text-indigo-600 transition-colors"
+                          title="Column Actions"
+                        >
+                          <ChevronDown className="h-3 w-3" />
+                        </button>
                       </div>
+
+                      {openHeaderMenu === 'name' && (
+                        <div className="absolute top-full left-6 mt-1 w-40 bg-white border border-slate-200 rounded-xl shadow-xl z-30 py-1.5 text-xs text-slate-700 font-semibold normal-case tracking-normal">
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSortBy('name');
+                              setSortOrder('asc');
+                              setPage(1);
+                              setOpenHeaderMenu(null);
+                            }}
+                            className="w-full px-3 py-1.5 text-left hover:bg-slate-50 flex items-center gap-1.5"
+                          >
+                            <span className="text-slate-400 font-bold">↑</span> Sort Ascending
+                          </button>
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSortBy('name');
+                              setSortOrder('desc');
+                              setPage(1);
+                              setOpenHeaderMenu(null);
+                            }}
+                            className="w-full px-3 py-1.5 text-left hover:bg-slate-50 flex items-center gap-1.5"
+                          >
+                            <span className="text-slate-400 font-bold">↓</span> Sort Descending
+                          </button>
+                          <div className="border-t border-slate-100 my-1" />
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPinNameColumn(true);
+                              setOpenHeaderMenu(null);
+                            }}
+                            className="w-full px-3 py-1.5 text-left hover:bg-indigo-50 hover:text-indigo-700 flex items-center gap-1.5"
+                          >
+                            <span>📌</span> Pin Left
+                          </button>
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPinNameColumn(false);
+                              setOpenHeaderMenu(null);
+                            }}
+                            className="w-full px-3 py-1.5 text-left hover:bg-slate-50 flex items-center gap-1.5"
+                          >
+                            <span>📍</span> Unpin Column
+                          </button>
+                        </div>
+                      )}
                     </th>
-                    <th 
-                      onClick={() => {
-                        if (sortBy === 'email') {
-                          setSortOrder(sortOrder === 'asc' ? 'desc' : sortOrder === 'desc' ? '' : 'asc');
-                          if (sortOrder === 'desc') setSortBy('');
-                        } else {
-                          setSortBy('email');
-                          setSortOrder('asc');
-                        }
-                        setPage(1);
-                      }}
-                      className="px-6 py-4 cursor-pointer hover:bg-slate-100/60 transition-colors"
-                    >
-                      <div className="flex items-center gap-1">
-                        Email Address {sortBy === 'email' ? (sortOrder === 'asc' ? '▲' : '▼') : '↕'}
+                    <th className="px-6 py-4 relative">
+                      <div className="flex items-center justify-between gap-1">
+                        <span 
+                          onClick={() => {
+                            if (sortBy === 'email') {
+                              setSortOrder(sortOrder === 'asc' ? 'desc' : sortOrder === 'desc' ? '' : 'asc');
+                              if (sortOrder === 'desc') setSortBy('');
+                            } else {
+                              setSortBy('email');
+                              setSortOrder('asc');
+                            }
+                            setPage(1);
+                          }}
+                          className="cursor-pointer hover:text-slate-800 flex items-center gap-1 select-none"
+                        >
+                          Email Address {sortBy === 'email' ? (sortOrder === 'asc' ? '▲' : '▼') : '↕'}
+                        </span>
+                        
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenHeaderMenu(openHeaderMenu === 'email' ? null : 'email');
+                          }}
+                          className="p-1 rounded hover:bg-slate-200/50 text-slate-400 hover:text-indigo-600 transition-colors"
+                          title="Column Actions"
+                        >
+                          <ChevronDown className="h-3 w-3" />
+                        </button>
                       </div>
+
+                      {openHeaderMenu === 'email' && (
+                        <div className="absolute top-full left-6 mt-1 w-40 bg-white border border-slate-200 rounded-xl shadow-xl z-30 py-1.5 text-xs text-slate-700 font-semibold normal-case tracking-normal">
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSortBy('email');
+                              setSortOrder('asc');
+                              setPage(1);
+                              setOpenHeaderMenu(null);
+                            }}
+                            className="w-full px-3 py-1.5 text-left hover:bg-slate-50 flex items-center gap-1.5"
+                          >
+                            <span className="text-slate-400 font-bold">↑</span> Sort Ascending
+                          </button>
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSortBy('email');
+                              setSortOrder('desc');
+                              setPage(1);
+                              setOpenHeaderMenu(null);
+                            }}
+                            className="w-full px-3 py-1.5 text-left hover:bg-slate-50 flex items-center gap-1.5"
+                          >
+                            <span className="text-slate-400 font-bold">↓</span> Sort Descending
+                          </button>
+                        </div>
+                      )}
                     </th>
-                    <th 
-                      onClick={() => {
-                        if (sortBy === 'role') {
-                          setSortOrder(sortOrder === 'asc' ? 'desc' : sortOrder === 'desc' ? '' : 'asc');
-                          if (sortOrder === 'desc') setSortBy('');
-                        } else {
-                          setSortBy('role');
-                          setSortOrder('asc');
-                        }
-                        setPage(1);
-                      }}
-                      className="px-6 py-4 cursor-pointer hover:bg-slate-100/60 transition-colors"
-                    >
-                      <div className="flex items-center gap-1">
-                        Role Status {sortBy === 'role' ? (sortOrder === 'asc' ? '▲' : '▼') : '↕'}
+                    <th className="px-6 py-4 relative">
+                      <div className="flex items-center justify-between gap-1">
+                        <span 
+                          onClick={() => {
+                            if (sortBy === 'role') {
+                              setSortOrder(sortOrder === 'asc' ? 'desc' : sortOrder === 'desc' ? '' : 'asc');
+                              if (sortOrder === 'desc') setSortBy('');
+                            } else {
+                              setSortBy('role');
+                              setSortOrder('asc');
+                            }
+                            setPage(1);
+                          }}
+                          className="cursor-pointer hover:text-slate-800 flex items-center gap-1 select-none"
+                        >
+                          Role Status {sortBy === 'role' ? (sortOrder === 'asc' ? '▲' : '▼') : '↕'}
+                        </span>
+                        
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenHeaderMenu(openHeaderMenu === 'role' ? null : 'role');
+                          }}
+                          className="p-1 rounded hover:bg-slate-200/50 text-slate-400 hover:text-indigo-600 transition-colors"
+                          title="Column Actions"
+                        >
+                          <ChevronDown className="h-3 w-3" />
+                        </button>
                       </div>
+
+                      {openHeaderMenu === 'role' && (
+                        <div className="absolute top-full left-6 mt-1 w-48 bg-white border border-slate-200 rounded-xl shadow-xl z-30 py-1.5 text-xs text-slate-700 font-semibold normal-case tracking-normal">
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSortBy('role');
+                              setSortOrder('asc');
+                              setPage(1);
+                              setOpenHeaderMenu(null);
+                            }}
+                            className="w-full px-3 py-1.5 text-left hover:bg-slate-50 flex items-center gap-1.5"
+                          >
+                            <span className="text-slate-400 font-bold">↑</span> Sort Ascending
+                          </button>
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSortBy('role');
+                              setSortOrder('desc');
+                              setPage(1);
+                              setOpenHeaderMenu(null);
+                            }}
+                            className="w-full px-3 py-1.5 text-left hover:bg-slate-50 flex items-center gap-1.5"
+                          >
+                            <span className="text-slate-400 font-bold">↓</span> Sort Descending
+                          </button>
+                          <div className="border-t border-slate-100 my-1" />
+                          <div className="px-3 py-1 text-[9px] uppercase tracking-wider text-slate-400 font-bold">Filter By Role</div>
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setRoleFilter('ALL');
+                              setPage(1);
+                              setOpenHeaderMenu(null);
+                            }}
+                            className={`w-full px-3 py-1.5 flex items-center justify-between hover:bg-slate-50 ${roleFilter === 'ALL' ? 'text-indigo-650 bg-indigo-50/40 font-bold' : ''}`}
+                          >
+                            <span>All Roles</span>
+                            {roleFilter === 'ALL' && <span>✓</span>}
+                          </button>
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setRoleFilter('USER');
+                              setPage(1);
+                              setOpenHeaderMenu(null);
+                            }}
+                            className={`w-full px-3 py-1.5 flex items-center justify-between hover:bg-slate-50 ${roleFilter === 'USER' ? 'text-indigo-650 bg-indigo-50/40 font-bold' : ''}`}
+                          >
+                            <span>User Only</span>
+                            {roleFilter === 'USER' && <span>✓</span>}
+                          </button>
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setRoleFilter('ADMIN');
+                              setPage(1);
+                              setOpenHeaderMenu(null);
+                            }}
+                            className={`w-full px-3 py-1.5 flex items-center justify-between hover:bg-slate-50 ${roleFilter === 'ADMIN' ? 'text-indigo-650 bg-indigo-50/40 font-bold' : ''}`}
+                          >
+                            <span>Admin Only</span>
+                            {roleFilter === 'ADMIN' && <span>✓</span>}
+                          </button>
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setRoleFilter('SUPER_ADMIN');
+                              setPage(1);
+                              setOpenHeaderMenu(null);
+                            }}
+                            className={`w-full px-3 py-1.5 flex items-center justify-between hover:bg-slate-50 ${roleFilter === 'SUPER_ADMIN' ? 'text-indigo-650 bg-indigo-50/40 font-bold' : ''}`}
+                          >
+                            <span>Super Admin Only</span>
+                            {roleFilter === 'SUPER_ADMIN' && <span>✓</span>}
+                          </button>
+                        </div>
+                      )}
                     </th>
                     <th className="px-6 py-4">Active Subscription</th>
                     <th 
-                      className={`px-6 py-4 text-right ${
+                      className={`px-6 py-4 text-right relative ${
                         pinActionsColumn 
                           ? 'sticky right-0 bg-slate-50/95 z-20 shadow-[-2px_0_5px_-2px_rgba(0,0,0,0.1)] border-l border-slate-200/60' 
                           : ''
                       }`}
                     >
-                      Actions
+                      <div className="flex items-center justify-end gap-1">
+                        <span>Actions</span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenHeaderMenu(openHeaderMenu === 'actions' ? null : 'actions');
+                          }}
+                          className="p-1 rounded hover:bg-slate-200/50 text-slate-400 hover:text-indigo-600 transition-colors"
+                          title="Column Actions"
+                        >
+                          <ChevronDown className="h-3 w-3" />
+                        </button>
+                      </div>
+
+                      {openHeaderMenu === 'actions' && (
+                        <div className="absolute top-full right-6 mt-1 w-40 bg-white border border-slate-200 rounded-xl shadow-xl z-30 py-1.5 text-xs text-slate-700 font-semibold normal-case tracking-normal text-left">
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPinActionsColumn(true);
+                              setOpenHeaderMenu(null);
+                            }}
+                            className="w-full px-3 py-1.5 text-left hover:bg-indigo-50 hover:text-indigo-700 flex items-center gap-1.5"
+                          >
+                            <span>📌</span> Pin Right
+                          </button>
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPinActionsColumn(false);
+                              setOpenHeaderMenu(null);
+                            }}
+                            className="w-full px-3 py-1.5 text-left hover:bg-slate-50 flex items-center gap-1.5"
+                          >
+                            <span>📍</span> Unpin Column
+                          </button>
+                        </div>
+                      )}
                     </th>
                   </tr>
                 </thead>

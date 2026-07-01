@@ -17,7 +17,7 @@ const getUsers = async (searchQuery = '', page = 1, limit = 10, role = '', sortB
   }
 
   if (role && role !== 'ALL') {
-    filter.role = role.toUpperCase();
+    filter.role = { $regex: new RegExp(`^${role}$`, 'i') };
   }
 
   let sortOptions = { role: 1, name: 1 };
